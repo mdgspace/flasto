@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="ProjectModuleManager">
+    <modules>
+      <module fileurl="file://$PROJECT_DIR$/FLASTO-FLoatingASsistiveTOuch.iml" filepath="$PROJECT_DIR$/FLASTO-FLoatingASsistiveTOuch.iml" />
+      <module fileurl="file://$PROJECT_DIR$/app/app.iml" filepath="$PROJECT_DIR$/app/app.iml" />
+      <module fileurl="file://$PROJECT_DIR$/floaters/floaters.iml" filepath="$PROJECT_DIR$/floaters/floaters.iml" />
+    </modules>
+  </component>
+</project>
