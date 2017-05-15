@@ -1,7 +1,13 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <declare-styleable name="CustomCircularFloatingView">
-        <attr name="color" format="color" />
+        <attr name="colorNormal" format="color" />
+        <attr name="colorPressed" format="color" />
+        <attr name="colorRipple" format="color" />
+        <attr name="floatingViewSize" format="enum">
+            <enum name="normal" value="0" />
+            <enum name="small" value="1" />
+        </attr>
     </declare-styleable>
 
 </resources>
