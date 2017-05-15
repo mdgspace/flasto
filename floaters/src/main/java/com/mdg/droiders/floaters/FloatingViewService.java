@@ -3,7 +3,9 @@ package com.mdg.droiders.floaters;
 import android.app.Service;
 import android.content.Intent;
 import android.graphics.PixelFormat;
+import android.graphics.Point;
 import android.os.IBinder;
+import android.view.Display;
 import android.view.Gravity;
 import android.view.LayoutInflater;
 import android.view.MotionEvent;
@@ -162,6 +164,17 @@ public class FloatingViewService extends Service {
                          */
 
                 case MotionEvent.ACTION_UP:
+                    Display display = mWindowManager.getDefaultDisplay();
+                    final Point size = new Point();
+                    display.getSize(size);
+                    int midX = (int) (size.x/2);
+                    if (params.x>=midX)
+                        params.x = size.x;
+                    else if (params.x<midX)
+                        params.x = 0;
+                    //update the layout with new X and Y coordinates
+                    mWindowManager.updateViewLayout(mFloatingView,params);
+
                     int diffX = (int)(event.getRawX()-initialTouchX);
                     int diffY = (int) (event.getRawY() - initialTouchY);
                     if(diffX<10&&diffY<10){
