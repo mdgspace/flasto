@@ -1,4 +1,4 @@
-package com.mdg.droiders.flasto_floatingassistivetouch;
+package com.mdg.droiders.flasto;
 
 import org.junit.Test;
 
