@@ -12,7 +12,6 @@ import android.widget.Toast;
 import com.mdg.droiders.floaters.FloatingViewService;
 
 public class MainActivity extends AppCompatActivity {
-    private static final int CODE_DRAW_OVER_OTHER_APP_PERMISSION = 2084;
     private boolean isReturnedFromSettings = false;
 
     @Override
@@ -21,21 +20,7 @@ public class MainActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
-        //Check if the application has draw over other apps permission or not?
-        //This permission is by default available for API<23. But for API > 23
-        //you have to ask for the permission in runtime.
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M && !Settings.canDrawOverlays(this)) {
 
-
-            //If the draw over permission is not available open the settings screen
-            //to grant the permission.
-            Intent intent = new Intent(Settings.ACTION_MANAGE_OVERLAY_PERMISSION,
-                    Uri.parse("package:" + getPackageName()));
-            isReturnedFromSettings=true;
-            startActivityForResult(intent, CODE_DRAW_OVER_OTHER_APP_PERMISSION);
-        } else {
-            initializeView();
-        }
     }
 
     /**
@@ -53,26 +38,39 @@ public class MainActivity extends AppCompatActivity {
     }
 
 
-
     @Override
     protected void onResume() {
         super.onResume();
-        if(isReturnedFromSettings){
-            isReturnedFromSettings=false;
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M && !Settings.canDrawOverlays(this)){
+        if (isReturnedFromSettings) {
+            isReturnedFromSettings = false;
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M && !Settings.canDrawOverlays(this)) {
                 //If the draw over permission is not available open the settings screen
                 //to grant the permission.
-                Intent intent = new Intent(Settings.ACTION_MANAGE_OVERLAY_PERMISSION,
-                        Uri.parse("package:" + getPackageName()));
-                isReturnedFromSettings=true;
+                isReturnedFromSettings = true;
                 Toast.makeText(this, "System overlay permission denied, closing app", Toast.LENGTH_SHORT).show();
-                startActivityForResult(intent, CODE_DRAW_OVER_OTHER_APP_PERMISSION);
+                finish();
             } else {
                 initializeView();
             }
 
+        } else {
+            //Check if the application has draw over other apps permission or not?
+            //This permission is by default available for API<23. But for API > 23
+            //you have to ask for the permission in runtime.
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M && !Settings.canDrawOverlays(this)) {
+
+
+                //If the draw over permission is not available open the settings screen
+                //to grant the permission.
+                Intent intent = new Intent(Settings.ACTION_MANAGE_OVERLAY_PERMISSION,
+                        Uri.parse("package:" + getPackageName()));
+                isReturnedFromSettings = true;
+                Toast.makeText(this, "Flasto needs permission to draw over other apps", Toast.LENGTH_SHORT).show();
+                startActivity(intent);
+            } else {
+                initializeView();
+            }
         }
-        else initializeView();
     }
 }
 
