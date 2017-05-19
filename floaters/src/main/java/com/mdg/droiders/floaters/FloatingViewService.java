@@ -21,6 +21,7 @@ public class FloatingViewService extends Service {
     private WindowManager mWindowManager;
     private View mFloatingView;
     private View mClosingButtonView;
+    Rect rc1,rc2;
 
 
 
@@ -43,6 +44,7 @@ public class FloatingViewService extends Service {
         Display display = mWindowManager.getDefaultDisplay();
         final Point size = new Point();
         display.getSize(size);
+
 
 
 
@@ -243,10 +245,10 @@ public class FloatingViewService extends Service {
          int[] loc = new int[2];
 
         v1.getLocationOnScreen(loc);
-        Rect rc1 = new Rect(loc[0],loc[1],loc[0]+v1.getWidth(),loc[1] + v1.getHeight());
+         rc1 = new Rect(loc[0],loc[1],loc[0]+v1.getWidth(),loc[1] + v1.getHeight());
 
         v2.getLocationOnScreen(loc);
-        Rect rc2 = new Rect(loc[0],loc[1],loc[0]+v2.getWidth(),loc[1]+v2.getHeight());
+         rc2 = new Rect(loc[0],loc[1],loc[0]+v2.getWidth(),loc[1]+v2.getHeight());
         if (Rect.intersects(rc1,rc2)){
 
             return true;

@@ -7,12 +7,12 @@ import android.os.Bundle;
 import android.provider.Settings;
 import android.support.v7.app.AppCompatActivity;
 import android.view.View;
-import android.widget.Toast;
 
 import com.mdg.droiders.floaters.FloatingViewService;
 
 public class MainActivity extends AppCompatActivity {
     private static final int CODE_DRAW_OVER_OTHER_APP_PERMISSION = 2084;
+    private boolean isReturnedFromSettings = false;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -30,6 +30,7 @@ public class MainActivity extends AppCompatActivity {
             //to grant the permission.
             Intent intent = new Intent(Settings.ACTION_MANAGE_OVERLAY_PERMISSION,
                     Uri.parse("package:" + getPackageName()));
+            isReturnedFromSettings=true;
             startActivityForResult(intent, CODE_DRAW_OVER_OTHER_APP_PERMISSION);
         } else {
             initializeView();
@@ -50,22 +51,26 @@ public class MainActivity extends AppCompatActivity {
         });
     }
 
-    @Override
-    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
-        if (requestCode == CODE_DRAW_OVER_OTHER_APP_PERMISSION) {
-            //Check if the permission is granted or not.
-            if (resultCode == RESULT_OK) {
-                initializeView();
-            } else { //Permission is not available
-                Toast.makeText(this,
-                        "Draw over other app permission not available. Closing the application",
-                        Toast.LENGTH_SHORT).show();
 
-                finish();
+
+    @Override
+    protected void onResume() {
+        super.onResume();
+        if(isReturnedFromSettings){
+            isReturnedFromSettings=false;
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M && !Settings.canDrawOverlays(this)){
+                //If the draw over permission is not available open the settings screen
+                //to grant the permission.
+                Intent intent = new Intent(Settings.ACTION_MANAGE_OVERLAY_PERMISSION,
+                        Uri.parse("package:" + getPackageName()));
+                isReturnedFromSettings=true;
+                startActivityForResult(intent, CODE_DRAW_OVER_OTHER_APP_PERMISSION);
+            } else {
+                initializeView();
             }
-        } else {
-            super.onActivityResult(requestCode, resultCode, data);
+
         }
+        else initializeView();
     }
 }
 
