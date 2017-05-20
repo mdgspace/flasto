@@ -1,4 +1,4 @@
-package com.mdg.droiders.flasto_floatingassistivetouch;
+package com.mdg.droiders.flasto;
 
 import android.content.Context;
 import android.support.test.InstrumentationRegistry;
@@ -21,6 +21,6 @@ public class ExampleInstrumentedTest {
         // Context of the app under test.
         Context appContext = InstrumentationRegistry.getTargetContext();
 
-        assertEquals("com.mdg.droiders.flasto_floatingassistivetouch", appContext.getPackageName());
+        assertEquals("com.mdg.droiders.flasto", appContext.getPackageName());
     }
 }
