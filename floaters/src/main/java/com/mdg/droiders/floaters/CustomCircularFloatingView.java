@@ -29,6 +29,8 @@ public class CustomCircularFloatingView extends android.support.v7.widget.AppCom
         super(context, attrs);
         setupAttributes(attrs);
         setupPaint();
+        this.setImageResource(R.drawable.default_pic);
+        this.setScaleType(ScaleType.CENTER_CROP);
     }
 
     @Override
