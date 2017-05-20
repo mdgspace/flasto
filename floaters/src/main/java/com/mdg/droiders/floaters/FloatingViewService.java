@@ -23,8 +23,6 @@ public class FloatingViewService extends Service {
     private View mClosingButtonView;
     Rect rc1,rc2;
 
-
-
     public FloatingViewService() {
     }
 
@@ -45,10 +43,6 @@ public class FloatingViewService extends Service {
         final Point size = new Point();
         display.getSize(size);
 
-
-
-
-
         //Add view to the window
         final WindowManager.LayoutParams params = new WindowManager.LayoutParams(ViewGroup.LayoutParams.WRAP_CONTENT,
                 ViewGroup.LayoutParams.WRAP_CONTENT, WindowManager.LayoutParams.TYPE_PHONE,
@@ -67,10 +61,7 @@ public class FloatingViewService extends Service {
         /*closeButtonParams.x = (int) (size.x)/2;
         closeButtonParams.y = (int) size.y;*/
 
-
         //Add the view to the window
-
-
         mWindowManager.addView(mFloatingView, params);
         mWindowManager.addView(mClosingButtonView,closeButtonParams);
 
@@ -145,8 +136,6 @@ public class FloatingViewService extends Service {
                 /*Intent intent = new Intent(FloatingViewService.this, mContext);
                 intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
                 startActivity(intent);*/
-
-
                 //close the service and remove view from the view hierarchy
                 stopSelf();
             }});
