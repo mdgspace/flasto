@@ -1,5 +1,6 @@
 package com.mdg.droiders.floaters;
 
+import android.animation.ValueAnimator;
 import android.app.Service;
 import android.content.Intent;
 import android.graphics.PixelFormat;
@@ -16,12 +17,14 @@ import android.view.WindowManager;
 import android.widget.ImageView;
 import android.widget.Toast;
 
+import static android.view.View.GONE;
+
 public class FloatingViewService extends Service {
 
+    Rect rc1, rc2;
     private WindowManager mWindowManager;
     private View mFloatingView;
     private View mClosingButtonView;
-    Rect rc1,rc2;
 
     public FloatingViewService() {
     }
@@ -36,12 +39,13 @@ public class FloatingViewService extends Service {
         Toast.makeText(this, "On create called", Toast.LENGTH_SHORT).show();
         super.onCreate();
         //Inflate the floating view layout
-        mFloatingView = LayoutInflater.from(this).inflate(R.layout.layout_floating,null);
-        mClosingButtonView = LayoutInflater.from(this).inflate(R.layout.close_button,null);
+        mFloatingView = LayoutInflater.from(this).inflate(R.layout.layout_floating, null);
+        mClosingButtonView = LayoutInflater.from(this).inflate(R.layout.close_button, null);
         mWindowManager = (WindowManager) getSystemService(WINDOW_SERVICE);
         Display display = mWindowManager.getDefaultDisplay();
         final Point size = new Point();
         display.getSize(size);
+        mClosingButtonView.setVisibility(GONE);
 
         //Add view to the window
         final WindowManager.LayoutParams params = new WindowManager.LayoutParams(ViewGroup.LayoutParams.WRAP_CONTENT,
@@ -63,7 +67,7 @@ public class FloatingViewService extends Service {
 
         //Add the view to the window
         mWindowManager.addView(mFloatingView, params);
-        mWindowManager.addView(mClosingButtonView,closeButtonParams);
+        mWindowManager.addView(mClosingButtonView, closeButtonParams);
 
 
         /**
@@ -123,7 +127,7 @@ public class FloatingViewService extends Service {
             @Override
             public void onClick(View view) {
                 collapsedView.setVisibility(View.VISIBLE);
-                expandedView.setVisibility(View.GONE);
+                expandedView.setVisibility(GONE);
             }
         });
 
@@ -138,7 +142,8 @@ public class FloatingViewService extends Service {
                 startActivity(intent);*/
                 //close the service and remove view from the view hierarchy
                 stopSelf();
-            }});
+            }
+        });
 
         /**
          * Making the floating widget responsible to the touch events by setting an onTouchListener
@@ -151,12 +156,12 @@ public class FloatingViewService extends Service {
 
             @Override
             public boolean onTouch(View v, MotionEvent event) {
-                switch (event.getAction()){
+                switch (event.getAction()) {
                     case MotionEvent.ACTION_DOWN:
                         //remember the initial position
                         initialX = params.x;
                         initialY = params.y;
-                        closeWindowButton.setVisibility(View.VISIBLE);
+                        mClosingButtonView.setVisibility(View.VISIBLE);
 
                         //get the touch location
                         initialTouchX = event.getRawX();
@@ -164,44 +169,46 @@ public class FloatingViewService extends Service {
                         return true;
                     case MotionEvent.ACTION_MOVE:
                         //update the new parameters of the position
-                        params.x = initialX + (int)(event.getRawX()-initialTouchX);
-                        params.y = initialY + (int) (event.getRawY()-initialTouchY);
+                        params.x = initialX + (int) (event.getRawX() - initialTouchX);
+                        params.y = initialY + (int) (event.getRawY() - initialTouchY);
 
                         //update the layout with new X and Y coordinates
-                        mWindowManager.updateViewLayout(mFloatingView,params);
+                        mWindowManager.updateViewLayout(mFloatingView, params);
                         /*if(isOverlapping(mClosingButtonView,mFloatingView))
                             Toast.makeText(FloatingViewService.this, "Test successful", Toast.LENGTH_SHORT).show();*/
                         return true;
-                        /**
-                         * Since we have implemented the onTouchListener therefore we cannot implement onClickListener
-                         * Therefor we make changes to the onTouchListener to handle touch events
-                         */
+                    /**
+                     * Since we have implemented the onTouchListener therefore we cannot implement onClickListener
+                     * Therefor we make changes to the onTouchListener to handle touch events
+                     */
 
-                case MotionEvent.ACTION_UP:
+                    case MotionEvent.ACTION_UP:
+
+                        if (!isOverlapping(mFloatingView, mClosingButtonView)) {
+                            int midX = (int) (size.x / 2);
+                            if (params.x >= midX) {
+                                animateToEnd(mFloatingView, params.x, size.x, params);
+                            } else if (params.x < midX) {
+                                animateToEnd(mFloatingView, params.x, 0, params);
+                            }
 
 
-                    int midX = (int) (size.x/2);
-                    if (params.x>=midX)
-                        params.x = size.x;
-                    else if (params.x<midX)
-                        params.x = 0;
-                    //update the layout with new X and Y coordinates
-                    mWindowManager.updateViewLayout(mFloatingView,params);
-
-                    int diffX = (int)(event.getRawX()-initialTouchX);
-                    int diffY = (int) (event.getRawY() - initialTouchY);
-                    if(diffX<10&&diffY<10){
-                        if(isViewCollapsed()){
-                            //When user clicks on the image view of the collapsed layout,
-                            //visibility of the collapsed layout will be changed to "View.GONE"
-                            //and expanded view will become visible.
-                            collapsedView.setVisibility(View.GONE);
-                            expandedView.setVisibility(View.VISIBLE);
+                            int diffX = (int) (event.getRawX() - initialTouchX);
+                            int diffY = (int) (event.getRawY() - initialTouchY);
+                            if (diffX < 10 && diffY < 10) {
+                                if (isViewCollapsed()) {
+                                    //When user clicks on the image view of the collapsed layout,
+                                    //visibility of the collapsed layout will be changed to "View.GONE"
+                                    //and expanded view will become visible.
+                                    collapsedView.setVisibility(GONE);
+                                    expandedView.setVisibility(View.VISIBLE);
+                                }
+                            }
+                            mClosingButtonView.setVisibility(GONE);
                         }
-                    }
-                    if(isOverlapping(mClosingButtonView,mFloatingView))
-                        stopSelf();
-                    return true;
+                        if (isOverlapping(mClosingButtonView, mFloatingView))
+                            stopSelf();
+                        return true;
 
                 }
                 return false;
@@ -222,27 +229,43 @@ public class FloatingViewService extends Service {
     @Override
     public void onDestroy() {
         super.onDestroy();
-        if (mFloatingView!=null) {
+        if (mFloatingView != null) {
             mWindowManager.removeView(mClosingButtonView);
             mWindowManager.removeView(mFloatingView);
         }
     }
 
-    private boolean isOverlapping (View v1 , View v2){
+    private boolean isOverlapping(View v1, View v2) {
 
         // Location holder
-         int[] loc = new int[2];
+        int[] loc = new int[2];
 
         v1.getLocationOnScreen(loc);
-         rc1 = new Rect(loc[0],loc[1],loc[0]+v1.getWidth(),loc[1] + v1.getHeight());
+        rc1 = new Rect(loc[0], loc[1], loc[0] + v1.getWidth(), loc[1] + v1.getHeight());
 
         v2.getLocationOnScreen(loc);
-         rc2 = new Rect(loc[0],loc[1],loc[0]+v2.getWidth(),loc[1]+v2.getHeight());
-        if (Rect.intersects(rc1,rc2)){
+        rc2 = new Rect(loc[0], loc[1], loc[0] + v2.getWidth(), loc[1] + v2.getHeight());
+        if (Rect.intersects(rc1, rc2)) {
 
             return true;
         }
         return false;
 
+    }
+
+    private void animateToEnd(final View viewToAnimate, int startX, int finalX, final WindowManager.LayoutParams params) {
+        ValueAnimator translateLeft = ValueAnimator.ofInt(startX, finalX);
+        translateLeft.addUpdateListener(new ValueAnimator.AnimatorUpdateListener() {
+            @Override
+            public void onAnimationUpdate(ValueAnimator animation) {
+                int updatedX = (Integer) animation.getAnimatedValue();
+                params.x = updatedX;
+                //update the layout with new X and Y coordinates
+                mWindowManager.updateViewLayout(mFloatingView, params);
+
+            }
+        });
+        translateLeft.setDuration(200);
+        translateLeft.start();
     }
 }
