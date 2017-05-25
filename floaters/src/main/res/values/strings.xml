@@ -1,3 +1,4 @@
 <resources>
     <string name="app_name">Floaters</string>
+    <string name="service_description">This Service is used to create folating heads</string>
 </resources>

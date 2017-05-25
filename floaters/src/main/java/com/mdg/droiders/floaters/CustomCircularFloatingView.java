@@ -8,10 +8,6 @@ import android.graphics.Color;
 import android.graphics.Paint;
 import android.support.annotation.Nullable;
 import android.util.AttributeSet;
-import android.view.View;
-import android.widget.ImageView;
-
-import static java.lang.Math.min;
 
 public class CustomCircularFloatingView extends android.support.v7.widget.AppCompatImageView {
 
@@ -25,19 +21,35 @@ public class CustomCircularFloatingView extends android.support.v7.widget.AppCom
     private float floatingViewRadius;
     private Paint paint;
 
+    public CustomCircularFloatingView(Context context) {
+        super(context);
+        setupPaint();
+        getResources().getDrawable(R.drawable.default_pic);
+        this.setScaleType(ScaleType.CENTER_CROP);
+    }
+
     public CustomCircularFloatingView(Context context, @Nullable AttributeSet attrs) {
         super(context, attrs);
         setupAttributes(attrs);
         setupPaint();
-        this.setImageResource(R.drawable.default_pic);
+        getResources().getDrawable(R.drawable.default_pic);
+        this.setScaleType(ScaleType.CENTER_CROP);
+    }
+
+    public CustomCircularFloatingView(Context context, AttributeSet attrs, int defStyleAttr) {
+        super(context, attrs, defStyleAttr);
+        setupAttributes(attrs);
+        setupPaint();
+        getResources().getDrawable(R.drawable.default_pic);
         this.setScaleType(ScaleType.CENTER_CROP);
     }
 
     @Override
     protected void onDraw(Canvas canvas) {
         super.onDraw(canvas);
-        float xcenter = ((float) getCircleSize()) / 2, ycenter = ((float) getCircleSize()) / 2;
-        canvas.drawCircle(xcenter,ycenter,floatingViewRadius,paint);
+        float xCenter = canvas.getWidth() / 2.0f;
+        float yCenter = canvas.getHeight() / 2.0f;
+        canvas.drawCircle(xCenter, yCenter, floatingViewRadius, paint);
     }
 
     @Override
@@ -61,14 +73,14 @@ public class CustomCircularFloatingView extends android.support.v7.widget.AppCom
     private void setupAttributes(AttributeSet attrs) {
         // Obtain a typed array of attributes
         TypedArray a = getContext().getTheme().obtainStyledAttributes(attrs, R.styleable.CustomCircularFloatingView, 0, 0);
-        floatingViewRadius = ((float) getCircleSize())/2;
+        floatingViewRadius = ((float) getCircleSize()) / 2;
 
         // Extract custom attributes into member variables
         try {
             colorNormal = a.getColor(R.styleable.CustomCircularFloatingView_colorNormal, Color.BLACK);
             colorPressed = a.getColor(R.styleable.CustomCircularFloatingView_colorPressed, Color.BLACK);
             colorRipple = a.getColor(R.styleable.CustomCircularFloatingView_colorRipple, Color.BLACK);
-            floatingViewSize =a.getInt(R.styleable.CustomCircularFloatingView_floatingViewSize, SIZE_NORMAL);
+            floatingViewSize = a.getInt(R.styleable.CustomCircularFloatingView_floatingViewSize, SIZE_NORMAL);
         } finally {
             // TypedArray objects are shared and must be recycled.
             a.recycle();
