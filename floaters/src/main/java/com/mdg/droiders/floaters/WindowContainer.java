@@ -1,20 +1,16 @@
 package com.mdg.droiders.floaters;
 
 import android.content.Context;
-import android.graphics.PixelFormat;
 import android.graphics.Point;
-import android.graphics.Rect;
 import android.view.View;
-import android.view.ViewGroup;
 import android.view.WindowManager;
 import android.widget.FrameLayout;
 import android.widget.RelativeLayout;
 
 import static android.content.Context.WINDOW_SERVICE;
 
-public class WindowContainer {
+class WindowContainer {
 
-    private Context ctx;
     private SheetLayoutContainer sheetLayoutContainer;
     private FloatingViewContainer floatingView;
     private int initialX, initialY;
@@ -23,11 +19,11 @@ public class WindowContainer {
     private boolean isLayoutSet;
     private int statusBarHeight;
     private WindowManager mWindowManager;
+    private int previousParamsX, previousParamsY;
 
-    public WindowContainer(Context ctx,
-                           SheetLayoutContainer sheetLayoutContainer,
-                           FloatingViewContainer floatingView) {
-        this.ctx = ctx;
+    WindowContainer(Context ctx,
+                    SheetLayoutContainer sheetLayoutContainer,
+                    FloatingViewContainer floatingView) {
         this.sheetLayoutContainer = sheetLayoutContainer;
         this.floatingView = floatingView;
         isVisible = false;
@@ -36,59 +32,41 @@ public class WindowContainer {
         isLayoutSet = false;
     }
 
-    public boolean isOverlapping(View v1, View v2) {
-        // Location holder
-        Rect rc1, rc2;
-        int[] loc = new int[2];
-
-        v1.getLocationOnScreen(loc);
-        rc1 = new Rect(loc[0], loc[1], loc[0] + v1.getWidth(), loc[1] + v1.getHeight());
-
-        v2.getLocationOnScreen(loc);
-        rc2 = new Rect(loc[0], loc[1], loc[0] + v2.getWidth(), loc[1] + v2.getHeight());
-        return Rect.intersects(rc1, rc2);
-    }
-
-    private WindowManager.LayoutParams initLayoutParams() {
-        return new WindowManager.LayoutParams(ViewGroup.LayoutParams.WRAP_CONTENT,
-                ViewGroup.LayoutParams.WRAP_CONTENT, WindowManager.LayoutParams.TYPE_PHONE,
-                WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE, PixelFormat.TRANSLUCENT);
-    }
-
-    public void setInitialPos(int initialX, int initialY) {
+    void setInitialPos(int initialX, int initialY) {
         this.initialX = initialX;
         this.initialY = initialY;
     }
 
-    public void setInitialTouchPos(int initialTouchX, int initialTouchY) {
+    void setInitialTouchPos(float initialTouchX, float initialTouchY) {
         this.initialTouchX = initialTouchX;
         this.initialTouchY = initialTouchY;
     }
 
-    public int getInitialX() {
+    int getInitialX() {
         return initialX;
     }
 
-    public int getInitialY() {
+    int getInitialY() {
         return initialY;
     }
 
-    public float getInitialTouchX() {
+    float getInitialTouchX() {
         return initialTouchX;
     }
 
-    public float getInitialTouchY() {
+    float getInitialTouchY() {
         return initialTouchY;
     }
 
-    public void toggleSheetStatus(Point size) {
+    void toggleSheetStatus(Point size) {
         WindowManager.LayoutParams mSheetLayoutLayoutParams = sheetLayoutContainer.getSheetLayoutParams();
+        setFloatingViewPosAfterTouch(size);
         if (isVisible) {
             sheetLayoutContainer.getmSheetLayout().setVisibility(View.GONE);
             mSheetLayoutLayoutParams.dimAmount = 0;
             mWindowManager.updateViewLayout(sheetLayoutContainer.getmSheetLayout(), mSheetLayoutLayoutParams);
         } else {
-            if(!isLayoutSet){
+            if (!isLayoutSet) {
                 setLayout(size);
             }
             mSheetLayoutLayoutParams.dimAmount = 0.4f;
@@ -119,5 +97,32 @@ public class WindowContainer {
         lp.setMarginStart(size.x - widthOfFLoatingView / 2 - arrowWidth / 2);
         sheetLayoutContainer.getArrow().setLayoutParams(lp);
         isLayoutSet = true;
+    }
+
+    private void setFloatingViewPosAfterTouch(Point size) {
+        WindowManager.LayoutParams params = floatingView.getFloatingViewParams();
+        if (isVisible) {
+            params.x = previousParamsX;
+            params.y = previousParamsY;
+            mWindowManager.updateViewLayout(floatingView.getmFloatingView(), params);
+        } else {
+            previousParamsX = params.x;
+            previousParamsY = params.y;
+            params.x = size.x;
+            params.y = 0;
+            mWindowManager.updateViewLayout(floatingView.getmFloatingView(), params);
+        }
+    }
+
+    void setFloatingViewPos(Point size) {
+        WindowManager.LayoutParams params = floatingView.getFloatingViewParams();
+        int midX = size.x / 2;
+        if (params.x >= midX)
+            params.x = size.x;
+        else if (params.x < midX)
+            params.x = 0;
+        //update the layout with new X and Y coordinates
+        mWindowManager.updateViewLayout(floatingView.getmFloatingView(), params);
+
     }
 }

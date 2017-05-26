@@ -8,6 +8,10 @@
             <enum name="normal" value="0" />
             <enum name="small" value="1" />
         </attr>
+        <attr name="floatingViewType" format="enum">
+            <enum name="image" value="0" />
+            <enum name="imageButton" value="1" />
+        </attr>
     </declare-styleable>
 
 </resources>

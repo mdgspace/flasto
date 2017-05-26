@@ -7,10 +7,14 @@
         android:layout_height="wrap_content"
         android:text="Hello! World"
         android:textStyle="bold"
-        android:textSize="20dp"/>
+        android:layout_centerHorizontal="true"
+        android:textSize="20sp"/>
     <Button
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
+        android:paddingLeft="20dp"
+        android:paddingRight="20dp"
+        android:text="@string/service_description"
         android:background="@color/colorPrimary"
         android:layout_centerInParent="true"/>
 </RelativeLayout>

@@ -8,7 +8,7 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.view.WindowManager;
 
-public class SheetLayoutContainer {
+class SheetLayoutContainer {
 
     private View mSheetLayout;
     private View mSheetContainer;
@@ -16,14 +16,14 @@ public class SheetLayoutContainer {
     private Context ctx;
     private WindowManager.LayoutParams sheetLayoutParams;
 
-    public SheetLayoutContainer(Context ctx) {
+    SheetLayoutContainer(Context ctx) {
         this.ctx = ctx;
         mSheetLayout = LayoutInflater.from(ctx).inflate(R.layout.layout_floating_sheet, null);
         mSheetContainer = mSheetLayout.findViewById(R.id.sheet_container);
         arrow = mSheetContainer.findViewById(R.id.arrow);
     }
 
-    public WindowManager.LayoutParams getDefaultSheetContainerLayoutParams() {
+    WindowManager.LayoutParams getDefaultSheetContainerLayoutParams() {
         if (sheetLayoutParams == null) {
             sheetLayoutParams = new WindowManager.LayoutParams(
                     ViewGroup.LayoutParams.MATCH_PARENT,
@@ -38,21 +38,25 @@ public class SheetLayoutContainer {
         return sheetLayoutParams;
     }
 
-    public WindowManager.LayoutParams getSheetLayoutParams() {
+    WindowManager.LayoutParams getSheetLayoutParams() {
         return (WindowManager.LayoutParams) mSheetLayout.getLayoutParams();
     }
 
-    public View getmSheetLayout() {
+    View getmSheetLayout() {
         return mSheetLayout;
     }
 
-    public View getmSheetContainer() {
+    View getmSheetContainer() {
         return mSheetContainer;
     }
 
-    public View getArrow() {
+    View getArrow() {
         return arrow;
     }
 
-
+    void setContent(int layoutId) {
+        //Parent Layout's layout is taken from user
+        View v = mSheetLayout.findViewById(R.id.parent_layout);
+        LayoutInflater.from(ctx).inflate(layoutId, (ViewGroup) v);
+    }
 }
