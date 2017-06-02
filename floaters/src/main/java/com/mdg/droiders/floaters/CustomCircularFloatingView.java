@@ -24,11 +24,11 @@ public class CustomCircularFloatingView extends android.support.v7.widget.AppCom
     private int colorPressed;
     private int colorRipple;
     private Paint bMapPaint;
-    private Rect rect;
     private int floatingViewSize;
     private float floatingViewRadius;
     private Paint paint;
     private int type;
+    private Rect rect;
     private PorterDuffXfermode porterDuffXfermode;
 
     public CustomCircularFloatingView(Context context) {
@@ -61,11 +61,8 @@ public class CustomCircularFloatingView extends android.support.v7.widget.AppCom
                 drawable = getResources().getDrawable(R.drawable.default_pic, null);
             Bitmap b = ((BitmapDrawable) drawable).getBitmap();
             Bitmap scaledBitmap = createCenterCroppedBMap(b, getCircleSize());
-            Bitmap bitmap = scaledBitmap.copy(Bitmap.Config.ARGB_8888, true);
-            canvas.drawARGB(0, 0, 0, 0);
-            canvas.drawCircle(xCenter, yCenter, floatingViewRadius, bMapPaint);
-            bMapPaint.setXfermode(porterDuffXfermode);
-            canvas.drawBitmap(bitmap, rect, rect, bMapPaint);
+            Bitmap out = getCircularBitmap(scaledBitmap, getCircleSize());
+            canvas.drawBitmap(out, getPaddingLeft(), getPaddingTop(), null);
         }
     }
 
@@ -155,8 +152,10 @@ public class CustomCircularFloatingView extends android.support.v7.widget.AppCom
             bMapPaint = new Paint();
             bMapPaint.setAntiAlias(true);
             bMapPaint.setColor(tmpColor);
+            bMapPaint.setFilterBitmap(true);
+            bMapPaint.setDither(true);
             rect = new Rect(0, 0, getCircleSize(), getCircleSize());
-            porterDuffXfermode = new PorterDuffXfermode(PorterDuff.Mode.SRC_IN);
+            porterDuffXfermode = new PorterDuffXfermode(PorterDuff.Mode.SRC_IN );
         }
     }
 
@@ -188,6 +187,16 @@ public class CustomCircularFloatingView extends android.support.v7.widget.AppCom
             );
         }
         return Bitmap.createScaledBitmap(dstBmp, scaleVal, scaleVal, false);
+    }
+
+    private Bitmap getCircularBitmap(Bitmap srcBtmap, int bitmapEdge) {
+        Bitmap bitmap = Bitmap.createBitmap(bitmapEdge, bitmapEdge, Bitmap.Config.ARGB_8888);
+        Canvas canvas = new Canvas(bitmap);
+        canvas.drawARGB(0, 0, 0, 0);
+        canvas.drawCircle(bitmapEdge / 2, bitmapEdge / 2, floatingViewRadius, bMapPaint);
+        bMapPaint.setXfermode(porterDuffXfermode);
+        canvas.drawBitmap(srcBtmap, rect, rect, bMapPaint);
+        return bitmap;
     }
 
 }

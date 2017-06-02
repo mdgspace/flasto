@@ -7,6 +7,9 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.view.WindowManager;
+import android.widget.RelativeLayout;
+
+import static android.widget.RelativeLayout.ALIGN_PARENT_BOTTOM;
 
 class SheetLayoutContainer {
 
@@ -14,7 +17,7 @@ class SheetLayoutContainer {
     private View mSheetContainer;
     private View arrow;
     private Context ctx;
-    private WindowManager.LayoutParams sheetLayoutParams;
+    private RelativeLayout.LayoutParams cachedSheetLayoutParams;
 
     SheetLayoutContainer(Context ctx) {
         this.ctx = ctx;
@@ -23,7 +26,7 @@ class SheetLayoutContainer {
         arrow = mSheetContainer.findViewById(R.id.arrow);
     }
 
-    WindowManager.LayoutParams getDefaultSheetContainerLayoutParams() {
+    /*WindowManager.LayoutParams getDefaultSheetContainerLayoutParams() {
         if (sheetLayoutParams == null) {
             sheetLayoutParams = new WindowManager.LayoutParams(
                     ViewGroup.LayoutParams.MATCH_PARENT,
@@ -36,6 +39,16 @@ class SheetLayoutContainer {
             sheetLayoutParams.dimAmount = 0.4f;
         }
         return sheetLayoutParams;
+    }*/
+
+    RelativeLayout.LayoutParams getDefaultSheetContainerLayoutParams() {
+        if(cachedSheetLayoutParams == null){
+            cachedSheetLayoutParams = new RelativeLayout.LayoutParams(
+                    ViewGroup.LayoutParams.MATCH_PARENT,
+                    ViewGroup.LayoutParams.WRAP_CONTENT);
+            cachedSheetLayoutParams.addRule(ALIGN_PARENT_BOTTOM);
+        }
+        return cachedSheetLayoutParams;
     }
 
     WindowManager.LayoutParams getSheetLayoutParams() {

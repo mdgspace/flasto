@@ -1,31 +1,34 @@
 package com.mdg.droiders.floaters;
 
 import android.content.Context;
-import android.graphics.PixelFormat;
-import android.view.Gravity;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-import android.view.WindowManager;
+import android.widget.RelativeLayout;
 
 class FloatingViewContainer {
 
     private View mFloatingView;
     private View collapsedView;
     private View expandedView;
-    private WindowManager.LayoutParams floatingViewParams;
+    private RelativeLayout.LayoutParams cachedFloatingViewParams;
 
     FloatingViewContainer(Context ctx) {
         this.mFloatingView = LayoutInflater.from(ctx).inflate(R.layout.layout_floating, null);
         collapsedView = mFloatingView.findViewById(R.id.collapse_view);
         expandedView = mFloatingView.findViewById(R.id.expanded_container);
+        mFloatingView.setLayerType(View.LAYER_TYPE_SOFTWARE, null);
+    }
+
+    FloatingViewContainer(Context ctx,boolean b) {
+        this.mFloatingView = LayoutInflater.from(ctx).inflate(R.layout.layout_floating, null);
     }
 
     View getmFloatingView() {
         return mFloatingView;
     }
 
-    WindowManager.LayoutParams getDefaultFloatingViewParams() {
+    /*WindowManager.LayoutParams getDefaultFloatingViewParams() {
         if (floatingViewParams == null) {
             floatingViewParams = new WindowManager.LayoutParams(ViewGroup.LayoutParams.WRAP_CONTENT,
                     ViewGroup.LayoutParams.WRAP_CONTENT, WindowManager.LayoutParams.TYPE_PHONE,
@@ -35,10 +38,22 @@ class FloatingViewContainer {
             floatingViewParams.y = 100;
         }
         return floatingViewParams;
+    }*/
+    RelativeLayout.LayoutParams getDefaultFloatingViewParams() {
+        if (cachedFloatingViewParams == null) {
+            cachedFloatingViewParams = new RelativeLayout.LayoutParams(
+                    ViewGroup.LayoutParams.WRAP_CONTENT,
+                    ViewGroup.LayoutParams.WRAP_CONTENT);
+        }
+        return cachedFloatingViewParams;
     }
 
-    WindowManager.LayoutParams getFloatingViewParams() {
+    /*WindowManager.LayoutParams getFloatingViewParams() {
         return (WindowManager.LayoutParams) mFloatingView.getLayoutParams();
+    }*/
+
+    RelativeLayout.LayoutParams getFloatingViewParams() {
+        return (RelativeLayout.LayoutParams) mFloatingView.getLayoutParams();
     }
 
     /**

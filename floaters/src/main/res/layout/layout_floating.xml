@@ -4,45 +4,21 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="wrap_content"
     android:layout_height="wrap_content"
-    android:orientation="vertical">
+    android:orientation="vertical"
+    android:id="@+id/root_container">
 
     <!--Root container-->
     <RelativeLayout
-        android:id="@+id/root_container"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         tools:ignore="UselessParent">
 
         <!--View while view is collapsed-->
-        <!--<RelativeLayout
-            android:id="@+id/collapse_view"
-            android:layout_width="wrap_content"
-            android:visibility="visible"
-            android:layout_height="wrap_content"
-            android:orientation="vertical">
-
-            &lt;!&ndash;Icon of floating widget &ndash;&gt;
-            <ImageView
-                android:id="@+id/collapsed_iv"
-                android:layout_width="60dp"
-                android:layout_height="60dp"
-                android:layout_marginTop="8dp"
-                android:src="@drawable/ic_android_circle"
-                tools:ignore="ContentDescription"/>
-
-            &lt;!&ndash;Close button&ndash;&gt;
-            <ImageView
-                android:id="@+id/close_btn"
-                android:layout_width="20dp"
-                android:layout_height="20dp"
-                android:layout_marginLeft="40dp"
-                android:src="@drawable/ic_close"
-                tools:ignore="ContentDescription"/>
-        </RelativeLayout>-->
         <com.mdg.droiders.floaters.CustomCircularFloatingView
             android:id="@+id/collapse_view"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
+            android:elevation="4dp"
             android:padding="4dp"
             app:floatingViewSize="normal" />
 

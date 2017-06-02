@@ -2,19 +2,17 @@ package com.mdg.droiders.floaters;
 
 import android.app.Service;
 import android.content.Intent;
-import android.graphics.PixelFormat;
 import android.graphics.Point;
 import android.graphics.Rect;
 import android.os.Binder;
 import android.os.IBinder;
 import android.view.Display;
-import android.view.Gravity;
 import android.view.LayoutInflater;
-import android.view.MotionEvent;
 import android.view.View;
 import android.view.ViewGroup;
 import android.view.WindowManager;
 import android.widget.ImageView;
+import android.widget.RelativeLayout;
 import android.widget.Toast;
 
 public class FloatingViewService extends Service {
@@ -22,10 +20,9 @@ public class FloatingViewService extends Service {
     private WindowManager mWindowManager;
     private FloatingViewContainer mFloatingContainer;
     private SheetLayoutContainer mSheetLayoutContainer;
-    private WindowContainer mWindowContainer;
+    private ExpandedWindow expandedWindow;
     private View mClosingButtonView;
-    private FloatingViewBinder mBinder;
-    private int expandedChoice = 0; //Default choice is of PLAYER
+    private int expandedChoice;
     Rect rc1, rc2;
 
     public enum FloatingViewExpanded {
@@ -43,11 +40,10 @@ public class FloatingViewService extends Service {
             if (type == FloatingViewExpanded.PLAYER) expandedChoice = 0;
             else if (type == FloatingViewExpanded.SHEET) expandedChoice = 1;
         }
+
         public void releaseService() {
-            if (mFloatingContainer.getmFloatingView() != null) {
-                mWindowManager.removeView(mClosingButtonView);
-                mWindowManager.removeView(mFloatingContainer.getmFloatingView());
-                mWindowManager.removeView(mSheetLayoutContainer.getmSheetLayout());
+            if (expandedWindow != null && mWindowManager != null) {
+                expandedWindow.releaseService(mWindowManager);
             }
         }
     }
@@ -57,7 +53,7 @@ public class FloatingViewService extends Service {
 
     @Override
     public IBinder onBind(Intent intent) {
-        mBinder = new FloatingViewBinder();
+        FloatingViewBinder mBinder = new FloatingViewBinder();
         createFloatingHead();
         return mBinder;
     }
@@ -69,9 +65,11 @@ public class FloatingViewService extends Service {
         //Inflate the floating view layout
         mFloatingContainer = new FloatingViewContainer(this);
         mSheetLayoutContainer = new SheetLayoutContainer(this);
-        mWindowContainer = new WindowContainer(this, mSheetLayoutContainer, mFloatingContainer);
+        WindowContainer mWindowContainer = new WindowContainer(this, mSheetLayoutContainer, mFloatingContainer);
+        expandedWindow = new ExpandedWindow(this, mWindowContainer);
         mClosingButtonView = LayoutInflater.from(this).inflate(R.layout.close_button, null);
         mWindowManager = (WindowManager) getSystemService(WINDOW_SERVICE);
+        expandedChoice = 0;  //Default choice is of PLAYER
     }
 
 
@@ -79,9 +77,10 @@ public class FloatingViewService extends Service {
     public void onDestroy() {
         super.onDestroy();
         if (mFloatingContainer.getmFloatingView() != null) {
-            mWindowManager.removeView(mClosingButtonView);
+            /*mWindowManager.removeView(mClosingButtonView);
             mWindowManager.removeView(mFloatingContainer.getmFloatingView());
-            mWindowManager.removeView(mSheetLayoutContainer.getmSheetLayout());
+            mWindowManager.removeView(mSheetLayoutContainer.getmSheetLayout());*/
+            mWindowManager.removeView(expandedWindow.getWindow());
         }
     }
 
@@ -97,11 +96,15 @@ public class FloatingViewService extends Service {
         return Rect.intersects(rc1, rc2);
     }
 
-    private WindowManager.LayoutParams initLayoutParams() {
-        return new WindowManager.LayoutParams(ViewGroup.LayoutParams.WRAP_CONTENT,
-                ViewGroup.LayoutParams.WRAP_CONTENT, WindowManager.LayoutParams.TYPE_PHONE,
-                WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE, PixelFormat.TRANSLUCENT);
-
+    private RelativeLayout.LayoutParams initLayoutParams() {
+        RelativeLayout.LayoutParams layoutParams = new RelativeLayout.LayoutParams(ViewGroup.LayoutParams.WRAP_CONTENT,
+                ViewGroup.LayoutParams.WRAP_CONTENT);
+        layoutParams.addRule(RelativeLayout.ALIGN_PARENT_BOTTOM);
+        int margin = (int) Utils.convertDpToPixel(4);
+        int bottomMargin = (int) Utils.convertDpToPixel(20);
+        layoutParams.setMargins(margin, margin, margin, bottomMargin);
+        layoutParams.addRule(RelativeLayout.CENTER_HORIZONTAL);
+        return layoutParams;
     }
 
     private void initOnClickListeners(View mFloatingView) {
@@ -169,19 +172,22 @@ public class FloatingViewService extends Service {
         size = new Point();
         display.getSize(size);
 
-        final WindowManager.LayoutParams params, closeButtonParams, sheetLayoutParams;
-        params = mFloatingContainer.getDefaultFloatingViewParams();
+        final RelativeLayout.LayoutParams closeButtonParams;
+        final WindowManager.LayoutParams sheetLayoutParams;
+        //params = mFloatingContainer.getDefaultFloatingViewParams();
         closeButtonParams = initLayoutParams();
-        sheetLayoutParams = mSheetLayoutContainer.getDefaultSheetContainerLayoutParams();
+        //sheetLayoutParams = mSheetLayoutContainer.getDefaultSheetContainerLayoutParams();
 
-        closeButtonParams.gravity = Gravity.BOTTOM | Gravity.CENTER;
         /*closeButtonParams.x = (int) (size.x)/2;
         closeButtonParams.y = (int) size.y;*/
 
         //Add the view to the window
-        mWindowManager.addView(mFloatingContainer.getmFloatingView(), params);
-        mWindowManager.addView(mClosingButtonView, closeButtonParams);
-        mWindowManager.addView(mSheetLayoutContainer.getmSheetLayout(), sheetLayoutParams);
+        //mWindowManager.addView(mFloatingContainer.getmFloatingView(), params);
+        //mWindowManager.addView(mClosingButtonView, closeButtonParams);
+        //mWindowManager.addView(mSheetLayoutContainer.getmSheetLayout(), sheetLayoutParams);
+        expandedWindow.addChildViews();
+        expandedWindow.addCloseButton(mClosingButtonView, closeButtonParams);
+        expandedWindow.addToWindow(mWindowManager);
 
         /*final View collapsedView = mFloatingView.findViewById(R.id.collapse_view);
         final View expandedView = mFloatingView.findViewById(R.id.expanded_container);*/
@@ -190,8 +196,11 @@ public class FloatingViewService extends Service {
 
         initOnClickListeners(mFloatingContainer.getmFloatingView());
 
+        expandedWindow.setDummyOnClickListener();
+        expandedWindow.setTouchListenerOnWindow(mWindowManager, expandedChoice);
+
         // Making the floating widget responsible to the touch events by setting an onTouchListener
-        mFloatingContainer.getmFloatingView().findViewById(R.id.root_container).
+        /*mFloatingContainer.getmFloatingView().findViewById(R.id.root_container).
                 setOnTouchListener(new View.OnTouchListener() {
                     @Override
                     public boolean onTouch(View v, MotionEvent event) {
@@ -215,21 +224,21 @@ public class FloatingViewService extends Service {
 
                                 //update the layout with new X and Y coordinates
                                 mWindowManager.updateViewLayout(mFloatingContainer.getmFloatingView(), params);
-                                /*if(isOverlapping(mClosingButtonView,mFloatingView))
-                                     Toast.makeText(FloatingViewService.this, "Test successful", Toast.LENGTH_SHORT).show();*/
+                                *//*if(isOverlapping(mClosingButtonView,mFloatingView))
+                                     Toast.makeText(FloatingViewService.this, "Test successful", Toast.LENGTH_SHORT).show();*//*
                                 return true;
                             }
 
                             case MotionEvent.ACTION_UP: {
                                 // Since we have implemented the onTouchListener therefore we cannot implement onClickListener
                                 // Therefor we make changes to the onTouchListener to handle touch events
-                                mWindowContainer.setFloatingViewPos(size);
+                                mWindowContainer.setFloatingViewPos(size, mWindowManager);
 
                                 int diffX = (int) (event.getRawX() - mWindowContainer.getInitialTouchX());
                                 int diffY = (int) (event.getRawY() - mWindowContainer.getInitialTouchY());
                                 if (diffX < 10 && diffY < 10) {
                                     if (expandedChoice == 1) { // If the view expands in a sheet Layout like Messenger
-                                        mWindowContainer.toggleSheetStatus(size);
+                                        mWindowContainer.toggleSheetStatus(size, mWindowManager);
                                     } else if (mFloatingContainer.isViewCollapsed()) {
                                         //When user clicks on the image view of the collapsed layout,
                                         //visibility of the collapsed layout will be changed to "View.GONE"
@@ -247,7 +256,7 @@ public class FloatingViewService extends Service {
                         }
                         return false;
                     }
-                });
+                });*/
     }
 
 }
