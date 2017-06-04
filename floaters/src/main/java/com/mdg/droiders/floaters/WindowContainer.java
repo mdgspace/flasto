@@ -2,7 +2,6 @@ package com.mdg.droiders.floaters;
 
 import android.content.Context;
 import android.graphics.Point;
-import android.graphics.Rect;
 import android.view.View;
 import android.view.WindowManager;
 import android.widget.FrameLayout;
@@ -98,7 +97,7 @@ class WindowContainer {
     }
 
     /*private void setFloatingViewPosAfterTouch(Point size, WindowManager mWindowManager) {
-        WindowManager.LayoutParams params = floatingView.getFloatingViewParams();
+        WindowManager.LayoutParams params = floatingView.getRelativeParams();
         if (isVisible) {
             params.x = previousParamsX;
             params.y = previousParamsY;
@@ -119,7 +118,7 @@ class WindowContainer {
             finalX = parentWidth - floatingView.getmFloatingView().getWidth();
         else if (floatingView.getmFloatingView().getX() < midX)
             finalX = 0;
-        RelativeLayout.LayoutParams lp = floatingView.getFloatingViewParams();
+        RelativeLayout.LayoutParams lp = floatingView.getRelativeParams();
         lp.leftMargin = finalX;
         floatingView.getmFloatingView().setLayoutParams(lp);
     }
@@ -128,7 +127,7 @@ class WindowContainer {
         return sheetLayoutContainer;
     }
 
-    FloatingViewContainer getFloatingView() {
+    FloatingViewContainer getFloatingContainer() {
         return floatingView;
     }
 }

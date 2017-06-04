@@ -15,57 +15,67 @@ class ExpandedWindow {
 
     private RelativeLayout window;
     private WindowContainer container;
-    private View closeButtonLayout, closeWindowButton;
+    //private View closeButtonLayout, closeWindowButton;
     private boolean isSheetVisible, isLayoutSet,
             isWindowVisible, isLayoutAddedToWindow;
-    private int statusBarHeight;
-    private int previousParamsX, previousParamsY;
-    private CollapsedWindow collapsedWindow;
-    private View.OnTouchListener listener;
+    private Integer expandedChoice;
+    private expandedWindowListener mListener;
+    //private int statusBarHeight;
+    //private int previousParamsX, previousParamsY;
+    //private CollapsedWindow collapsedWindow;
+    //private View.OnTouchListener listener;
+
+    interface expandedWindowListener {
+        void clickHappened();
+
+        void overlapped();
+    }
 
     ExpandedWindow(Context context, WindowContainer container) {
         this.container = container;
         window = new RelativeLayout(context);
-        isSheetVisible = false;
+        //isSheetVisible = false;
         isLayoutSet = false;
-        isLayoutAddedToWindow = false;
-        isWindowVisible = false;
-        FloatingViewContainer floatingViewContainer = new FloatingViewContainer(context, false);
-        collapsedWindow = new CollapsedWindow(floatingViewContainer);
-        statusBarHeight = (int) Math.ceil(25 * context.getResources().getDisplayMetrics().density);
+        //isLayoutAddedToWindow = false;
+        //isWindowVisible = false;
+        //FloatingViewContainer floatingViewContainer = new FloatingViewContainer(context, false);
+        //collapsedWindow = new CollapsedWindow(floatingViewContainer);
+        //statusBarHeight = (int) Math.ceil(25 * context.getResources().getDisplayMetrics().density);
     }
 
-    void setDummyOnClickListener() {
+    /*void setDummyOnClickListener() {
         collapsedWindow.collapsedWindowFloatingView.
                 setOnTouchListener(new View.OnTouchListener() {
                     @Override
                     public boolean onTouch(View v, MotionEvent event) {
                         swapWindow(false, null);
                         event.setAction(MotionEvent.ACTION_DOWN);
-                        listener.onTouch(container.getFloatingView().getmFloatingView(), event);
+                        listener.onTouch(container.getFloatingContainer().getmFloatingView(), event);
                         return true;
                     }
                 });
-    }
+    }*/
 
-    void setTouchListenerOnWindow(final WindowManager windowManager, final int expandedChoice) {
-        final FloatingViewContainer containerFloat = container.getFloatingView();
+    //moves floating view inside the relative layout
+    void setTouchListenerOnWindow(final WindowManager windowManager, final View closeButtonLayout) {
+        final FloatingViewContainer containerFloat = container.getFloatingContainer();
         final View mfloatingView = containerFloat.getmFloatingView();
-        listener = new View.OnTouchListener() {
+        container.getFloatingContainer().getmFloatingView()
+                .setOnTouchListener(new View.OnTouchListener() {
                     @Override
                     public boolean onTouch(View v, MotionEvent event) {
                         switch (event.getAction()) {
                             case MotionEvent.ACTION_DOWN: {
-                                RelativeLayout.LayoutParams lp = containerFloat.getFloatingViewParams();
+                                RelativeLayout.LayoutParams lp = containerFloat.getRelativeParams();
                                 //remember the initial position
                                 container.setInitialPos(lp.leftMargin, lp.topMargin);
                                 //get the touch location
                                 container.setInitialTouchPos(event.getRawX(), event.getRawY());
-                                closeWindowButton.setVisibility(View.VISIBLE);
+                                //closeWindowButton.setVisibility(View.VISIBLE);
                                 return true;
                             }
                             case MotionEvent.ACTION_MOVE: {
-                                RelativeLayout.LayoutParams lp = containerFloat.getFloatingViewParams();
+                                RelativeLayout.LayoutParams lp = containerFloat.getRelativeParams();
                                 int x, y;
                                 x = (int) (container.getInitialX() +
                                         event.getRawX() - container.getInitialTouchX());
@@ -98,36 +108,35 @@ class ExpandedWindow {
                                         containerFloat.getCollapsedView().setVisibility(View.GONE);
                                         containerFloat.getExpandedView().setVisibility(View.VISIBLE);
                                     }
+                                    mListener.clickHappened();
                                 }
-                                closeWindowButton.setVisibility(View.GONE);
+                                //closeWindowButton.setVisibility(View.GONE);
                                 if (isOverlapping(closeButtonLayout, containerFloat.getmFloatingView()))
-                                    releaseService(windowManager);
-                                else swapWindow(true, windowManager);
+                                    mListener.overlapped();
+                                //releaseService(windowManager);
+                                //else swapWindow(true, windowManager);
                                 return true;
                             }
-
                         }
                         return false;
                     }
-                };
-        container.getFloatingView().getmFloatingView()
-                .setOnTouchListener(listener);
+                });
     }
 
     void addChildViews() {
         window.addView(container.getSheetLayoutContainer().getmSheetLayout()
                 , container.getSheetLayoutContainer().getDefaultSheetContainerLayoutParams());
-        window.addView(container.getFloatingView().getmFloatingView(),
-                container.getFloatingView().getDefaultFloatingViewParams());
+        window.addView(container.getFloatingContainer().getmFloatingView(),
+                container.getFloatingContainer().getDefaultRelativeParams());
     }
 
-    void addCloseButton(View view, RelativeLayout.LayoutParams layoutParams) {
+    /*void addCloseButton(View view, RelativeLayout.LayoutParams layoutParams) {
         if (closeButtonLayout == null) {
             closeButtonLayout = view;
             window.addView(view, layoutParams);
             closeWindowButton = closeButtonLayout.findViewById(R.id.close_window_button);
         }
-    }
+    }*/
 
     void removeChildViews() {
         window.removeAllViews();
@@ -143,12 +152,12 @@ class ExpandedWindow {
                 PixelFormat.TRANSLUCENT);
         layoutParams.dimAmount = 0;
         wm.addView(window, layoutParams);
-        addCollapsedViewToWindow(wm);
+        //addCollapsedViewToWindow(wm);
         window.setVisibility(View.GONE);
-        isLayoutAddedToWindow = true;
+        //isLayoutAddedToWindow = true;
     }
 
-    private void addCollapsedViewToWindow(WindowManager wm) {
+    /*private void addCollapsedViewToWindow(WindowManager wm) {
         WindowManager.LayoutParams layoutParams = new WindowManager.LayoutParams(
                 ViewGroup.LayoutParams.MATCH_PARENT,
                 ViewGroup.LayoutParams.MATCH_PARENT,
@@ -156,26 +165,26 @@ class ExpandedWindow {
                 WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE,
                 PixelFormat.TRANSLUCENT);
         wm.addView(collapsedWindow.collapsedWindowFloatingView, layoutParams);
-    }
+    }*/
 
-    private void toggleVisibiltyStatus(WindowManager wm) {
-        setFloatingViewPosAfterTouch();
+    void toggleVisibiltyStatus(WindowManager wm) {
+        //setFloatingViewPosAfterTouch();
         WindowManager.LayoutParams lp = getWindowLayoutParams();
-        if (isSheetVisible) {
+        /*if (isSheetVisible) {
             container.getSheetLayoutContainer().
                     getmSheetLayout().setVisibility(View.GONE);
             lp.dimAmount = 0;
-        } else {
-            if (!isLayoutSet) {
-                setSheetHeight();
-                setArrowPos();
-                isLayoutSet = true;
-            }
-            lp.dimAmount = 0.4f;
-            container.getSheetLayoutContainer().
-                    getmSheetLayout().setVisibility(View.VISIBLE);
+        } else {*/
+        if (!isLayoutSet) {
+            setSheetHeight();
+            setArrowPos();
+            isLayoutSet = true;
         }
-        isSheetVisible = !isSheetVisible;
+        lp.dimAmount = 0.4f;
+        container.getSheetLayoutContainer().
+                getmSheetLayout().setVisibility(View.VISIBLE);
+        //}
+        // isSheetVisible = !isSheetVisible;
         wm.updateViewLayout(window, lp);
     }
 
@@ -184,13 +193,13 @@ class ExpandedWindow {
                 (RelativeLayout.LayoutParams) container.getSheetLayoutContainer()
                         .getArrow().getLayoutParams();
         int arrowWidth = lp.width;
-        int widthOfFLoatingView = container.getFloatingView().getmFloatingView().getWidth();
+        int widthOfFLoatingView = container.getFloatingContainer().getmFloatingView().getWidth();
         lp.setMarginStart(window.getWidth() - widthOfFLoatingView / 2 - arrowWidth / 2);
         container.getSheetLayoutContainer().getArrow().setLayoutParams(lp);
     }
 
     private void setSheetHeight() {
-        int heightOfFloatingView = container.getFloatingView().
+        int heightOfFloatingView = container.getFloatingContainer().
                 getmFloatingView().getHeight();
         FrameLayout.LayoutParams layoutParams =
                 (FrameLayout.LayoutParams) container.getSheetLayoutContainer()
@@ -223,25 +232,25 @@ class ExpandedWindow {
         return Rect.intersects(rc1, rc2);
     }
 
-    void releaseService(WindowManager mWindowManager) {
+    /*void releaseService(WindowManager mWindowManager) {
         if (isLayoutAddedToWindow) {
             mWindowManager.removeView(getWindow());
-            mWindowManager.removeView(collapsedWindow.
-                    collapsedWindowFloatingView);
+            //mWindowManager.removeView(collapsedWindow.
+            //        collapsedWindowFloatingView);
             isLayoutAddedToWindow = false;
         }
-    }
+    }*/
 
-    private void toggleWindowVisibility() {
+    /*private void toggleWindowVisibility() {
         if (isWindowVisible) window.setVisibility(View.GONE);
         else window.setVisibility(View.VISIBLE);
-    }
+    }*/
 
-    private void swapWindow(boolean setCollapsedViewPos, WindowManager windowManager) {
+    /*private void swapWindow(boolean setCollapsedViewPos, WindowManager windowManager) {
         if (!isSheetVisible) {
             if (setCollapsedViewPos) {
                 RelativeLayout.LayoutParams layoutParams
-                        = container.getFloatingView().getFloatingViewParams();
+                        = container.getFloatingContainer().getRelativeParams();
                 int x = layoutParams.leftMargin;
                 int y = layoutParams.topMargin + statusBarHeight;
                 WindowManager.LayoutParams params = collapsedWindow.getLayoutParams();
@@ -254,31 +263,53 @@ class ExpandedWindow {
             toggleWindowVisibility();
             isWindowVisible = !isWindowVisible;
         }
-    }
+    }*/
 
-    private void setFloatingViewPosAfterTouch() {
-        RelativeLayout.LayoutParams params = container.getFloatingView().getFloatingViewParams();
+    void setFloatingView() {
+        RelativeLayout.LayoutParams params = container.getFloatingContainer().getRelativeParams();
+            params.leftMargin = window.getWidth() -
+                    container.getFloatingContainer().getmFloatingView().getWidth();
+            params.topMargin = 0;
+            window.updateViewLayout(container.getFloatingContainer().
+                    getmFloatingView(), params);
+    }
+    /*private void setFloatingViewPosAfterTouch() {
+        RelativeLayout.LayoutParams params = container.getFloatingContainer().getRelativeParams();
         if (isSheetVisible) {
             params.leftMargin = previousParamsX;
             params.topMargin = previousParamsY;
-            window.updateViewLayout(container.getFloatingView().
+            window.updateViewLayout(container.getFloatingContainer().
                     getmFloatingView(), params);
         } else {
             previousParamsX = params.leftMargin;
             previousParamsY = params.topMargin;
             params.leftMargin = window.getWidth() -
-                    container.getFloatingView().getmFloatingView().getWidth();
+                    container.getFloatingContainer().getmFloatingView().getWidth();
             params.topMargin = 0;
-            window.updateViewLayout(container.getFloatingView().
+            window.updateViewLayout(container.getFloatingContainer().
                     getmFloatingView(), params);
         }
-    }
+    }*/
 
     RelativeLayout getWindow() {
         return window;
     }
 
-    private class CollapsedWindow {
+    void changeDimVal(int dim, WindowManager windowManager) {
+        WindowManager.LayoutParams lp = getWindowLayoutParams();
+        lp.dimAmount = 0.4f;
+        windowManager.updateViewLayout(window, lp);
+    }
+
+    public void setExpandedChoice(Integer expandedChoice) {
+        this.expandedChoice = expandedChoice;
+    }
+
+    public void setmListener(expandedWindowListener mListener) {
+        this.mListener = mListener;
+    }
+
+    /*private class CollapsedWindow {
         private View collapsedWindowFloatingView;
 
         private CollapsedWindow(FloatingViewContainer floatingViewContainer) {
@@ -296,5 +327,5 @@ class ExpandedWindow {
         private WindowManager.LayoutParams getLayoutParams() {
             return (WindowManager.LayoutParams) collapsedWindowFloatingView.getLayoutParams();
         }
-    }
+    }*/
 }
