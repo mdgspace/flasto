@@ -10,7 +10,6 @@ import android.os.IBinder;
 import android.view.Display;
 import android.view.Gravity;
 import android.view.LayoutInflater;
-import android.view.MotionEvent;
 import android.view.View;
 import android.view.ViewGroup;
 import android.view.WindowManager;
@@ -20,12 +19,13 @@ import android.widget.Toast;
 public class FloatingViewService extends Service {
 
     private WindowManager mWindowManager;
-    private FloatingViewContainer mFloatingContainer;
+    private FloatingViewContainer floatingExpandedContainer, floatingCollapsedContainer;
     private SheetLayoutContainer mSheetLayoutContainer;
-    private WindowContainer mWindowContainer;
-    private View mClosingButtonView;
+    private ExpandedWindow expandedWindow;
+    private CollapsedWindow collapsedWindow;
     private FloatingViewBinder mBinder;
-    private int expandedChoice = 0; //Default choice is of PLAYER
+    private View mClosingButtonView;
+    private Integer expandedChoice = 0;  //Default choice is of PLAYER
     Rect rc1, rc2;
 
     public enum FloatingViewExpanded {
@@ -33,7 +33,7 @@ public class FloatingViewService extends Service {
         SHEET
     }
 
-    // Contains public methhods that the Client app can call
+    // Contains public methods that the User app can call
     public class FloatingViewBinder extends Binder {
         public void setParentLayout(int layoutId) {
             mSheetLayoutContainer.setContent(layoutId);
@@ -43,11 +43,11 @@ public class FloatingViewService extends Service {
             if (type == FloatingViewExpanded.PLAYER) expandedChoice = 0;
             else if (type == FloatingViewExpanded.SHEET) expandedChoice = 1;
         }
+
         public void releaseService() {
-            if (mFloatingContainer.getmFloatingView() != null) {
-                mWindowManager.removeView(mClosingButtonView);
-                mWindowManager.removeView(mFloatingContainer.getmFloatingView());
-                mWindowManager.removeView(mSheetLayoutContainer.getmSheetLayout());
+            if (expandedWindow != null && mWindowManager != null && collapsedWindow != null) {
+                mWindowManager.removeView(expandedWindow.getWindow());
+                mWindowManager.removeView(collapsedWindow.getWindow());
             }
         }
     }
@@ -67,9 +67,12 @@ public class FloatingViewService extends Service {
         Toast.makeText(this, "On create called", Toast.LENGTH_SHORT).show();
         super.onCreate();
         //Inflate the floating view layout
-        mFloatingContainer = new FloatingViewContainer(this);
+        floatingExpandedContainer = new FloatingViewContainer(this, true);
         mSheetLayoutContainer = new SheetLayoutContainer(this);
-        mWindowContainer = new WindowContainer(this, mSheetLayoutContainer, mFloatingContainer);
+        WindowContainer mWindowContainer = new WindowContainer(this, mSheetLayoutContainer, floatingExpandedContainer);
+        expandedWindow = new ExpandedWindow(this, mWindowContainer);
+        floatingCollapsedContainer = new FloatingViewContainer(this, true);
+        collapsedWindow = new CollapsedWindow(this, floatingCollapsedContainer);
         mClosingButtonView = LayoutInflater.from(this).inflate(R.layout.close_button, null);
         mWindowManager = (WindowManager) getSystemService(WINDOW_SERVICE);
     }
@@ -78,10 +81,12 @@ public class FloatingViewService extends Service {
     @Override
     public void onDestroy() {
         super.onDestroy();
-        if (mFloatingContainer.getmFloatingView() != null) {
-            mWindowManager.removeView(mClosingButtonView);
-            mWindowManager.removeView(mFloatingContainer.getmFloatingView());
-            mWindowManager.removeView(mSheetLayoutContainer.getmSheetLayout());
+        if (floatingExpandedContainer.getmFloatingView() != null) {
+            /*mWindowManager.removeView(mClosingButtonView);
+            mWindowManager.removeView(floatingExpandedContainer.getmFloatingView());
+            mWindowManager.removeView(mSheetLayoutContainer.getmSheetLayout());*/
+            mWindowManager.removeView(expandedWindow.getWindow());
+            mWindowManager.removeView(collapsedWindow.getWindow());
         }
     }
 
@@ -142,8 +147,8 @@ public class FloatingViewService extends Service {
         closeButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                mFloatingContainer.getCollapsedView().setVisibility(View.VISIBLE);
-                mFloatingContainer.getExpandedView().setVisibility(View.GONE);
+                floatingExpandedContainer.getCollapsedView().setVisibility(View.VISIBLE);
+                floatingExpandedContainer.getExpandedView().setVisibility(View.GONE);
             }
         });
 
@@ -169,29 +174,67 @@ public class FloatingViewService extends Service {
         size = new Point();
         display.getSize(size);
 
-        final WindowManager.LayoutParams params, closeButtonParams, sheetLayoutParams;
-        params = mFloatingContainer.getDefaultFloatingViewParams();
+        final WindowManager.LayoutParams closeButtonParams;
+        //final WindowManager.LayoutParams sheetLayoutParams;
+        //params = floatingExpandedContainer.getDefaultRelativeParams();
         closeButtonParams = initLayoutParams();
-        sheetLayoutParams = mSheetLayoutContainer.getDefaultSheetContainerLayoutParams();
+        //sheetLayoutParams = mSheetLayoutContainer.getDefaultSheetContainerLayoutParams();
 
         closeButtonParams.gravity = Gravity.BOTTOM | Gravity.CENTER;
         /*closeButtonParams.x = (int) (size.x)/2;
         closeButtonParams.y = (int) size.y;*/
 
         //Add the view to the window
-        mWindowManager.addView(mFloatingContainer.getmFloatingView(), params);
+        //mWindowManager.addView(floatingExpandedContainer.getmFloatingView(), params);
         mWindowManager.addView(mClosingButtonView, closeButtonParams);
-        mWindowManager.addView(mSheetLayoutContainer.getmSheetLayout(), sheetLayoutParams);
+        //mWindowManager.addView(mSheetLayoutContainer.getmSheetLayout(), sheetLayoutParams);
+        expandedWindow.addChildViews();
+        collapsedWindow.addChildViews();
+        //expandedWindow.addCloseButton(mClosingButtonView, closeButtonParams);
+        expandedWindow.addToWindow(mWindowManager);
+        collapsedWindow.addToWindow(mWindowManager);
 
         /*final View collapsedView = mFloatingView.findViewById(R.id.collapse_view);
         final View expandedView = mFloatingView.findViewById(R.id.expanded_container);*/
         //the root element of the closing button
         final View closeWindowButton = mClosingButtonView.findViewById(R.id.close_window_button);
 
-        initOnClickListeners(mFloatingContainer.getmFloatingView());
+        initOnClickListeners(floatingExpandedContainer.getmFloatingView());
+
+        //expandedWindow.setDummyOnClickListener();
+        expandedWindow.setExpandedChoice(expandedChoice);
+        expandedWindow.setTouchListenerOnWindow(mWindowManager, closeWindowButton);
+        collapsedWindow.setOnTouchListenerOnWindow(mWindowManager, size, closeWindowButton);
+        expandedWindow.setmListener(new ExpandedWindow.expandedWindowListener() {
+            @Override
+            public void clickHappened() {
+                expandedWindow.getWindow().setVisibility(View.GONE);
+                collapsedWindow.getWindow().setVisibility(View.VISIBLE);
+            }
+
+            @Override
+            public void overlapped() {
+                mBinder.releaseService();
+            }
+        });
+        collapsedWindow.setmListener(new CollapsedWindow.collapsedWindowListener() {
+            @Override
+            public void clickHappened() {
+                collapsedWindow.getWindow().setVisibility(View.GONE);
+                expandedWindow.toggleVisibiltyStatus(mWindowManager);
+                expandedWindow.setFloatingView();
+                expandedWindow.setExpandedChoice(expandedChoice);
+                expandedWindow.getWindow().setVisibility(View.VISIBLE);
+            }
+
+            @Override
+            public void overlapped() {
+                mBinder.releaseService();
+            }
+        });
 
         // Making the floating widget responsible to the touch events by setting an onTouchListener
-        mFloatingContainer.getmFloatingView().findViewById(R.id.root_container).
+        /*floatingExpandedContainer.getmFloatingView().findViewById(R.id.root_container).
                 setOnTouchListener(new View.OnTouchListener() {
                     @Override
                     public boolean onTouch(View v, MotionEvent event) {
@@ -214,32 +257,32 @@ public class FloatingViewService extends Service {
                                         (int) (event.getRawY() - mWindowContainer.getInitialTouchY());
 
                                 //update the layout with new X and Y coordinates
-                                mWindowManager.updateViewLayout(mFloatingContainer.getmFloatingView(), params);
-                                /*if(isOverlapping(mClosingButtonView,mFloatingView))
-                                     Toast.makeText(FloatingViewService.this, "Test successful", Toast.LENGTH_SHORT).show();*/
+                                mWindowManager.updateViewLayout(floatingExpandedContainer.getmFloatingView(), params);
+                                *//*if(isOverlapping(mClosingButtonView,mFloatingView))
+                                     Toast.makeText(FloatingViewService.this, "Test successful", Toast.LENGTH_SHORT).show();*//*
                                 return true;
                             }
 
                             case MotionEvent.ACTION_UP: {
                                 // Since we have implemented the onTouchListener therefore we cannot implement onClickListener
                                 // Therefor we make changes to the onTouchListener to handle touch events
-                                mWindowContainer.setFloatingViewPos(size);
+                                mWindowContainer.setFloatingViewPos(size, mWindowManager);
 
                                 int diffX = (int) (event.getRawX() - mWindowContainer.getInitialTouchX());
                                 int diffY = (int) (event.getRawY() - mWindowContainer.getInitialTouchY());
                                 if (diffX < 10 && diffY < 10) {
                                     if (expandedChoice == 1) { // If the view expands in a sheet Layout like Messenger
-                                        mWindowContainer.toggleSheetStatus(size);
-                                    } else if (mFloatingContainer.isViewCollapsed()) {
+                                        mWindowContainer.toggleSheetStatus(size, mWindowManager);
+                                    } else if (floatingExpandedContainer.isViewCollapsed()) {
                                         //When user clicks on the image view of the collapsed layout,
                                         //visibility of the collapsed layout will be changed to "View.GONE"
                                         //and expanded view will become visible.
-                                        mFloatingContainer.getCollapsedView().setVisibility(View.GONE);
-                                        mFloatingContainer.getExpandedView().setVisibility(View.VISIBLE);
+                                        floatingExpandedContainer.getCollapsedView().setVisibility(View.GONE);
+                                        floatingExpandedContainer.getExpandedView().setVisibility(View.VISIBLE);
                                     }
                                 }
 
-                                if (isOverlapping(mClosingButtonView, mFloatingContainer.getmFloatingView()))
+                                if (isOverlapping(mClosingButtonView, floatingExpandedContainer.getmFloatingView()))
                                     mBinder.releaseService();
                                 return true;
                             }
@@ -247,7 +290,7 @@ public class FloatingViewService extends Service {
                         }
                         return false;
                     }
-                });
+                });*/
     }
 
 }

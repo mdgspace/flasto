@@ -7,18 +7,16 @@ import android.view.WindowManager;
 import android.widget.FrameLayout;
 import android.widget.RelativeLayout;
 
-import static android.content.Context.WINDOW_SERVICE;
-
 class WindowContainer {
 
     private SheetLayoutContainer sheetLayoutContainer;
     private FloatingViewContainer floatingView;
-    private int initialX, initialY;
+    private float initialX;
+    private float initialY;
     private float initialTouchX, initialTouchY;
     private boolean isVisible;
     private boolean isLayoutSet;
     private int statusBarHeight;
-    private WindowManager mWindowManager;
     private int previousParamsX, previousParamsY;
 
     WindowContainer(Context ctx,
@@ -28,11 +26,10 @@ class WindowContainer {
         this.floatingView = floatingView;
         isVisible = false;
         statusBarHeight = (int) Math.ceil(25 * ctx.getResources().getDisplayMetrics().density);
-        mWindowManager = (WindowManager) ctx.getSystemService(WINDOW_SERVICE);
         isLayoutSet = false;
     }
 
-    void setInitialPos(int initialX, int initialY) {
+    void setInitialPos(float initialX, float initialY) {
         this.initialX = initialX;
         this.initialY = initialY;
     }
@@ -42,11 +39,11 @@ class WindowContainer {
         this.initialTouchY = initialTouchY;
     }
 
-    int getInitialX() {
+    float getInitialX() {
         return initialX;
     }
 
-    int getInitialY() {
+    float getInitialY() {
         return initialY;
     }
 
@@ -58,9 +55,9 @@ class WindowContainer {
         return initialTouchY;
     }
 
-    void toggleSheetStatus(Point size) {
+    void toggleSheetStatus(Point size, WindowManager mWindowManager) {
         WindowManager.LayoutParams mSheetLayoutLayoutParams = sheetLayoutContainer.getSheetLayoutParams();
-        setFloatingViewPosAfterTouch(size);
+        //setFloatingViewPosAfterTouch(size, mWindowManager);
         if (isVisible) {
             sheetLayoutContainer.getmSheetLayout().setVisibility(View.GONE);
             mSheetLayoutLayoutParams.dimAmount = 0;
@@ -89,7 +86,7 @@ class WindowContainer {
                 = layoutParams.height;
         sheetLayoutContainer.getmSheetContainer().requestLayout();
         sheetLayoutContainer.getmSheetLayout().requestLayout();
-        // Set X coordinates of sheet Layout (specially arrow view)
+        // Set X coordinates of sheet Layout (specifically arrow view)
         RelativeLayout.LayoutParams lp =
                 (RelativeLayout.LayoutParams) sheetLayoutContainer.getArrow().getLayoutParams();
         int arrowWidth = lp.width;
@@ -99,8 +96,8 @@ class WindowContainer {
         isLayoutSet = true;
     }
 
-    private void setFloatingViewPosAfterTouch(Point size) {
-        WindowManager.LayoutParams params = floatingView.getFloatingViewParams();
+    /*private void setFloatingViewPosAfterTouch(Point size, WindowManager mWindowManager) {
+        WindowManager.LayoutParams params = floatingView.getRelativeParams();
         if (isVisible) {
             params.x = previousParamsX;
             params.y = previousParamsY;
@@ -113,16 +110,24 @@ class WindowContainer {
             mWindowManager.updateViewLayout(floatingView.getmFloatingView(), params);
         }
     }
+*/
+    void setFloatingViewPos(int parentWidth) {
+        int midX = parentWidth / 2;
+        int finalX = 0;
+        if (floatingView.getmFloatingView().getX() >= midX)
+            finalX = parentWidth - floatingView.getmFloatingView().getWidth();
+        else if (floatingView.getmFloatingView().getX() < midX)
+            finalX = 0;
+        RelativeLayout.LayoutParams lp = floatingView.getRelativeParams();
+        lp.leftMargin = finalX;
+        floatingView.getmFloatingView().setLayoutParams(lp);
+    }
 
-    void setFloatingViewPos(Point size) {
-        WindowManager.LayoutParams params = floatingView.getFloatingViewParams();
-        int midX = size.x / 2;
-        if (params.x >= midX)
-            params.x = size.x;
-        else if (params.x < midX)
-            params.x = 0;
-        //update the layout with new X and Y coordinates
-        mWindowManager.updateViewLayout(floatingView.getmFloatingView(), params);
+    SheetLayoutContainer getSheetLayoutContainer() {
+        return sheetLayoutContainer;
+    }
 
+    FloatingViewContainer getFloatingContainer() {
+        return floatingView;
     }
 }
