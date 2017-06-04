@@ -155,7 +155,7 @@ public class CustomCircularFloatingView extends android.support.v7.widget.AppCom
             bMapPaint.setFilterBitmap(true);
             bMapPaint.setDither(true);
             rect = new Rect(0, 0, getCircleSize(), getCircleSize());
-            porterDuffXfermode = new PorterDuffXfermode(PorterDuff.Mode.SRC_IN );
+            porterDuffXfermode = new PorterDuffXfermode(PorterDuff.Mode.SRC_IN);
         }
     }
 

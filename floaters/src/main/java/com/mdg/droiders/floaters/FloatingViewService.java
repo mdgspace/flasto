@@ -4,7 +4,6 @@ import android.app.Service;
 import android.content.Intent;
 import android.graphics.PixelFormat;
 import android.graphics.Point;
-import android.graphics.Rect;
 import android.os.Binder;
 import android.os.IBinder;
 import android.view.Display;
@@ -24,35 +23,78 @@ public class FloatingViewService extends Service {
     private ExpandedWindow expandedWindow;
     private CollapsedWindow collapsedWindow;
     private FloatingViewBinder mBinder;
+    // TODO: Make the Closing button disappear when finger is lifted off the screen and visible again when the finger touches the screen
     private View mClosingButtonView;
-    private Integer expandedChoice = 0;  //Default choice is of PLAYER
-    Rect rc1, rc2;
+    private Integer expandedChoice = 0;  //Default choice is of MUSIC PLAYER
 
+    /**
+     * Contains the types of Expanded Views the service can offer.
+     */
     public enum FloatingViewExpanded {
+        /**
+         * Floating view expands into a mini music player type view
+         * which contains play/pause, next song & previous song options.
+         */
         PLAYER,
+        /**
+         * Floating view expands into a sheet just like messenger
+         * chat heads does.
+         */
         SHEET
     }
 
-    // Contains public methods that the User app can call
+    /**
+     * Binder class that contains public method which the user can call
+     * to interact with the service.
+     */
     public class FloatingViewBinder extends Binder {
+        /**
+         * Adds the layout specified by layoutId as a child view to the sheet layout.
+         * The specified layout is shown in the sheet layout when the floating view expands into sheet layout.
+         * <p><strong>Note:</strong>It is mandatory that you put all your content in a single xml
+         * and add that xml alone to the SheetLayout. Further calls to this function will not add
+         * the xml as a child to the sheet layout</p>
+         *
+         * @param layoutId The layout Id of the xml which is to be shown in expanded mode
+         * @see #setParentLayout(ViewGroup)
+         */
         public void setParentLayout(int layoutId) {
             mSheetLayoutContainer.setContent(layoutId);
         }
 
+        /**
+         * Adds the specified layout as child to the sheet layout with default layout params.
+         * <p><strong>Note: </strong>It is mandatory that you put all your content in a single ViewGroup
+         * and add that ViewGroup alone to the SheetLayout. Further calls to this function will not add
+         * the view as a child to the sheet layout</p>
+         *
+         * @param layout The ViewGroup which is to be shown in expanded mode
+         * @see #setParentLayout(int)
+         */
+        public void setParentLayout(ViewGroup layout) {
+            mSheetLayoutContainer.setContent(layout);
+        }
+
+        /**
+         * Specify the type of expanded view you want when the floating view expands. Currently
+         * available choices are {@link FloatingViewExpanded#SHEET} and {@link FloatingViewExpanded#PLAYER}.
+         *
+         * @param type The type of expanded view.
+         */
         public void specifyExpandedView(FloatingViewExpanded type) {
             if (type == FloatingViewExpanded.PLAYER) expandedChoice = 0;
             else if (type == FloatingViewExpanded.SHEET) expandedChoice = 1;
         }
 
+        /**
+         * Removes all the views from the current window.
+         */
         public void releaseService() {
             if (expandedWindow != null && mWindowManager != null && collapsedWindow != null) {
                 mWindowManager.removeView(expandedWindow.getWindow());
                 mWindowManager.removeView(collapsedWindow.getWindow());
             }
         }
-    }
-
-    public FloatingViewService() {
     }
 
     @Override
@@ -66,14 +108,17 @@ public class FloatingViewService extends Service {
     public void onCreate() {
         Toast.makeText(this, "On create called", Toast.LENGTH_SHORT).show();
         super.onCreate();
-        //Inflate the floating view layout
+        // Init expanded view related classes
         floatingExpandedContainer = new FloatingViewContainer(this, true);
         mSheetLayoutContainer = new SheetLayoutContainer(this);
-        WindowContainer mWindowContainer = new WindowContainer(this, mSheetLayoutContainer, floatingExpandedContainer);
+        WindowContainer mWindowContainer = new WindowContainer(mSheetLayoutContainer, floatingExpandedContainer);
         expandedWindow = new ExpandedWindow(this, mWindowContainer);
+        // Init collapsed view related classes
         floatingCollapsedContainer = new FloatingViewContainer(this, true);
         collapsedWindow = new CollapsedWindow(this, floatingCollapsedContainer);
+        // Init close button at which will be position at the bottom of the screen
         mClosingButtonView = LayoutInflater.from(this).inflate(R.layout.close_button, null);
+
         mWindowManager = (WindowManager) getSystemService(WINDOW_SERVICE);
     }
 
@@ -81,43 +126,26 @@ public class FloatingViewService extends Service {
     @Override
     public void onDestroy() {
         super.onDestroy();
-        if (floatingExpandedContainer.getmFloatingView() != null) {
-            /*mWindowManager.removeView(mClosingButtonView);
-            mWindowManager.removeView(floatingExpandedContainer.getmFloatingView());
-            mWindowManager.removeView(mSheetLayoutContainer.getmSheetLayout());*/
-            mWindowManager.removeView(expandedWindow.getWindow());
-            mWindowManager.removeView(collapsedWindow.getWindow());
-        }
+        mBinder.releaseService();
     }
 
-    private boolean isOverlapping(View v1, View v2) {
-        // Location holder
-        int[] loc = new int[2];
-
-        v1.getLocationOnScreen(loc);
-        rc1 = new Rect(loc[0], loc[1], loc[0] + v1.getWidth(), loc[1] + v1.getHeight());
-
-        v2.getLocationOnScreen(loc);
-        rc2 = new Rect(loc[0], loc[1], loc[0] + v2.getWidth(), loc[1] + v2.getHeight());
-        return Rect.intersects(rc1, rc2);
-    }
-
+    /**
+     * @return Default {@link android.view.WindowManager.LayoutParams} for the closing button
+     */
     private WindowManager.LayoutParams initLayoutParams() {
         return new WindowManager.LayoutParams(ViewGroup.LayoutParams.WRAP_CONTENT,
                 ViewGroup.LayoutParams.WRAP_CONTENT, WindowManager.LayoutParams.TYPE_PHONE,
                 WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE, PixelFormat.TRANSLUCENT);
-
     }
 
+    // TODO: Move the initialisation of onCLickListeners to the Floating View container class.
+
+    /**
+     * Init on click listener in the MUSIC PLAYER expanded version of the floating view.
+     *
+     * @param mFloatingView The floating view that of {@link ExpandedWindow}
+     */
     private void initOnClickListeners(View mFloatingView) {
-        //Set the close button
-        /*ImageView closeServiceButton = (ImageView) mFloatingView.findViewById(R.id.close_btn);
-        closeServiceButton.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                stopSelf();
-            }
-        });*/
 
         ImageView playButton = (ImageView) mFloatingView.findViewById(R.id.play_btn);
         playButton.setOnClickListener(new View.OnClickListener() {
@@ -175,33 +203,25 @@ public class FloatingViewService extends Service {
         display.getSize(size);
 
         final WindowManager.LayoutParams closeButtonParams;
-        //final WindowManager.LayoutParams sheetLayoutParams;
-        //params = floatingExpandedContainer.getDefaultRelativeParams();
         closeButtonParams = initLayoutParams();
-        //sheetLayoutParams = mSheetLayoutContainer.getDefaultSheetContainerLayoutParams();
 
         closeButtonParams.gravity = Gravity.BOTTOM | Gravity.CENTER;
         /*closeButtonParams.x = (int) (size.x)/2;
         closeButtonParams.y = (int) size.y;*/
 
-        //Add the view to the window
-        //mWindowManager.addView(floatingExpandedContainer.getmFloatingView(), params);
-        mWindowManager.addView(mClosingButtonView, closeButtonParams);
-        //mWindowManager.addView(mSheetLayoutContainer.getmSheetLayout(), sheetLayoutParams);
         expandedWindow.addChildViews();
         collapsedWindow.addChildViews();
-        //expandedWindow.addCloseButton(mClosingButtonView, closeButtonParams);
+
+        //Add the view to the window
+        mWindowManager.addView(mClosingButtonView, closeButtonParams);
         expandedWindow.addToWindow(mWindowManager);
         collapsedWindow.addToWindow(mWindowManager);
 
-        /*final View collapsedView = mFloatingView.findViewById(R.id.collapse_view);
-        final View expandedView = mFloatingView.findViewById(R.id.expanded_container);*/
         //the root element of the closing button
         final View closeWindowButton = mClosingButtonView.findViewById(R.id.close_window_button);
 
         initOnClickListeners(floatingExpandedContainer.getmFloatingView());
 
-        //expandedWindow.setDummyOnClickListener();
         expandedWindow.setExpandedChoice(expandedChoice);
         expandedWindow.setTouchListenerOnWindow(mWindowManager, closeWindowButton);
         collapsedWindow.setOnTouchListenerOnWindow(mWindowManager, size, closeWindowButton);
@@ -232,65 +252,6 @@ public class FloatingViewService extends Service {
                 mBinder.releaseService();
             }
         });
-
-        // Making the floating widget responsible to the touch events by setting an onTouchListener
-        /*floatingExpandedContainer.getmFloatingView().findViewById(R.id.root_container).
-                setOnTouchListener(new View.OnTouchListener() {
-                    @Override
-                    public boolean onTouch(View v, MotionEvent event) {
-                        switch (event.getAction()) {
-                            case MotionEvent.ACTION_DOWN: {
-                                //remember the initial position
-                                mWindowContainer.setInitialPos(params.x, params.y);
-                                closeWindowButton.setVisibility(View.VISIBLE);
-
-                                //get the touch location
-                                mWindowContainer.setInitialTouchPos(event.getRawX(), event.getRawY());
-
-                                return true;
-                            }
-                            case MotionEvent.ACTION_MOVE: {
-                                //update the new parameters of the position
-                                params.x = mWindowContainer.getInitialX() +
-                                        (int) (event.getRawX() - mWindowContainer.getInitialTouchX());
-                                params.y = mWindowContainer.getInitialY() +
-                                        (int) (event.getRawY() - mWindowContainer.getInitialTouchY());
-
-                                //update the layout with new X and Y coordinates
-                                mWindowManager.updateViewLayout(floatingExpandedContainer.getmFloatingView(), params);
-                                *//*if(isOverlapping(mClosingButtonView,mFloatingView))
-                                     Toast.makeText(FloatingViewService.this, "Test successful", Toast.LENGTH_SHORT).show();*//*
-                                return true;
-                            }
-
-                            case MotionEvent.ACTION_UP: {
-                                // Since we have implemented the onTouchListener therefore we cannot implement onClickListener
-                                // Therefor we make changes to the onTouchListener to handle touch events
-                                mWindowContainer.setFloatingViewPos(size, mWindowManager);
-
-                                int diffX = (int) (event.getRawX() - mWindowContainer.getInitialTouchX());
-                                int diffY = (int) (event.getRawY() - mWindowContainer.getInitialTouchY());
-                                if (diffX < 10 && diffY < 10) {
-                                    if (expandedChoice == 1) { // If the view expands in a sheet Layout like Messenger
-                                        mWindowContainer.toggleSheetStatus(size, mWindowManager);
-                                    } else if (floatingExpandedContainer.isViewCollapsed()) {
-                                        //When user clicks on the image view of the collapsed layout,
-                                        //visibility of the collapsed layout will be changed to "View.GONE"
-                                        //and expanded view will become visible.
-                                        floatingExpandedContainer.getCollapsedView().setVisibility(View.GONE);
-                                        floatingExpandedContainer.getExpandedView().setVisibility(View.VISIBLE);
-                                    }
-                                }
-
-                                if (isOverlapping(mClosingButtonView, floatingExpandedContainer.getmFloatingView()))
-                                    mBinder.releaseService();
-                                return true;
-                            }
-
-                        }
-                        return false;
-                    }
-                });*/
     }
 
 }

@@ -11,52 +11,64 @@ import android.view.WindowManager;
 import android.widget.FrameLayout;
 import android.widget.RelativeLayout;
 
+/**
+ * Contains a Relative Layout that has floating view and the sheet layout as its child views
+ * and various methods to implement "floatation" of the floating view and set the position of sheet layout
+ */
 class ExpandedWindow {
 
+    /**
+     * It is the Relative Layout that is used as a container
+     * for all elements in the {@link ExpandedWindow}
+     */
     private RelativeLayout window;
+    /**
+     * {@link WindowContainer} instance
+     */
     private WindowContainer container;
-    //private View closeButtonLayout, closeWindowButton;
-    private boolean isSheetVisible, isLayoutSet,
-            isWindowVisible, isLayoutAddedToWindow;
+    /**
+     * {@link Boolean} value to indicate whether the expanded layout
+     * has been set or laid out once so that the floating view is above
+     * sheet layout.
+     */
+    private boolean isLayoutSet;
     private Integer expandedChoice;
+    /**
+     * {@link expandedWindowListener} instance
+     */
     private expandedWindowListener mListener;
-    //private int statusBarHeight;
-    //private int previousParamsX, previousParamsY;
-    //private CollapsedWindow collapsedWindow;
-    //private View.OnTouchListener listener;
 
+    /**
+     * an interface to notify service about click event or overlapping with the
+     * {@link FloatingViewService#mClosingButtonView} and the {@link #window)}
+     * <p>Similar to {@link com.mdg.droiders.floaters.CollapsedWindow.collapsedWindowListener}</p>
+     */
     interface expandedWindowListener {
         void clickHappened();
 
         void overlapped();
     }
 
+    /**
+     * Constructor for {@link ExpandedWindow} class.
+     *
+     * @param context   The {@link Context} to use
+     * @param container The {@link WindowContainer} instance to use
+     */
     ExpandedWindow(Context context, WindowContainer container) {
         this.container = container;
         window = new RelativeLayout(context);
-        //isSheetVisible = false;
         isLayoutSet = false;
-        //isLayoutAddedToWindow = false;
-        //isWindowVisible = false;
-        //FloatingViewContainer floatingViewContainer = new FloatingViewContainer(context, false);
-        //collapsedWindow = new CollapsedWindow(floatingViewContainer);
-        //statusBarHeight = (int) Math.ceil(25 * context.getResources().getDisplayMetrics().density);
     }
 
-    /*void setDummyOnClickListener() {
-        collapsedWindow.collapsedWindowFloatingView.
-                setOnTouchListener(new View.OnTouchListener() {
-                    @Override
-                    public boolean onTouch(View v, MotionEvent event) {
-                        swapWindow(false, null);
-                        event.setAction(MotionEvent.ACTION_DOWN);
-                        listener.onTouch(container.getFloatingContainer().getmFloatingView(), event);
-                        return true;
-                    }
-                });
-    }*/
-
     //moves floating view inside the relative layout
+
+    /**
+     * Sets Touch listener on the floating view in the expanded {@link #window}
+     *
+     * @param windowManager     The {@link WindowManager} instance to use.
+     * @param closeButtonLayout The closeButtonView to see if the floating view overlaps with it.
+     */
     void setTouchListenerOnWindow(final WindowManager windowManager, final View closeButtonLayout) {
         final FloatingViewContainer containerFloat = container.getFloatingContainer();
         final View mfloatingView = containerFloat.getmFloatingView();
@@ -71,7 +83,6 @@ class ExpandedWindow {
                                 container.setInitialPos(lp.leftMargin, lp.topMargin);
                                 //get the touch location
                                 container.setInitialTouchPos(event.getRawX(), event.getRawY());
-                                //closeWindowButton.setVisibility(View.VISIBLE);
                                 return true;
                             }
                             case MotionEvent.ACTION_MOVE: {
@@ -99,6 +110,7 @@ class ExpandedWindow {
                                 int diffX = (int) (event.getRawX() - container.getInitialTouchX());
                                 int diffY = (int) (event.getRawY() - container.getInitialTouchY());
                                 if (diffX < 10 && diffY < 10) {
+                                    // TODO: Set MUSIC PLAYER functionality
                                     if (expandedChoice == 1) { // If the view expands in a sheet Layout like Messenger
                                         toggleVisibiltyStatus(windowManager);
                                     } else if (containerFloat.isViewCollapsed()) {
@@ -110,11 +122,8 @@ class ExpandedWindow {
                                     }
                                     mListener.clickHappened();
                                 }
-                                //closeWindowButton.setVisibility(View.GONE);
                                 if (isOverlapping(closeButtonLayout, containerFloat.getmFloatingView()))
                                     mListener.overlapped();
-                                //releaseService(windowManager);
-                                //else swapWindow(true, windowManager);
                                 return true;
                             }
                         }
@@ -123,6 +132,9 @@ class ExpandedWindow {
                 });
     }
 
+    /**
+     * Adds the sheetLayout and floating view to the {@link #window}
+     */
     void addChildViews() {
         window.addView(container.getSheetLayoutContainer().getmSheetLayout()
                 , container.getSheetLayoutContainer().getDefaultSheetContainerLayoutParams());
@@ -130,18 +142,15 @@ class ExpandedWindow {
                 container.getFloatingContainer().getDefaultRelativeParams());
     }
 
-    /*void addCloseButton(View view, RelativeLayout.LayoutParams layoutParams) {
-        if (closeButtonLayout == null) {
-            closeButtonLayout = view;
-            window.addView(view, layoutParams);
-            closeWindowButton = closeButtonLayout.findViewById(R.id.close_window_button);
-        }
-    }*/
-
     void removeChildViews() {
         window.removeAllViews();
     }
 
+    /**
+     * {@link #window} will be added to the screen window covering the whole screen.
+     *
+     * @param wm {@link WindowManager} instance
+     */
     void addToWindow(WindowManager wm) {
         WindowManager.LayoutParams layoutParams = new WindowManager.LayoutParams(
                 ViewGroup.LayoutParams.MATCH_PARENT,
@@ -152,42 +161,29 @@ class ExpandedWindow {
                 PixelFormat.TRANSLUCENT);
         layoutParams.dimAmount = 0;
         wm.addView(window, layoutParams);
-        //addCollapsedViewToWindow(wm);
         window.setVisibility(View.GONE);
-        //isLayoutAddedToWindow = true;
     }
 
-    /*private void addCollapsedViewToWindow(WindowManager wm) {
-        WindowManager.LayoutParams layoutParams = new WindowManager.LayoutParams(
-                ViewGroup.LayoutParams.MATCH_PARENT,
-                ViewGroup.LayoutParams.MATCH_PARENT,
-                WindowManager.LayoutParams.TYPE_PHONE,
-                WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE,
-                PixelFormat.TRANSLUCENT);
-        wm.addView(collapsedWindow.collapsedWindowFloatingView, layoutParams);
-    }*/
-
+    /**
+     * Dims the background and sets the layout depending on the value of  {@link #isLayoutSet}
+     *
+     * @param wm {@link WindowManager} instance to use
+     */
     void toggleVisibiltyStatus(WindowManager wm) {
-        //setFloatingViewPosAfterTouch();
-        WindowManager.LayoutParams lp = getWindowLayoutParams();
-        /*if (isSheetVisible) {
-            container.getSheetLayoutContainer().
-                    getmSheetLayout().setVisibility(View.GONE);
-            lp.dimAmount = 0;
-        } else {*/
         if (!isLayoutSet) {
+            WindowManager.LayoutParams lp = getWindowLayoutParams();
             setSheetHeight();
             setArrowPos();
+            lp.dimAmount = 0.4f;
+            wm.updateViewLayout(window, lp);
             isLayoutSet = true;
         }
-        lp.dimAmount = 0.4f;
-        container.getSheetLayoutContainer().
-                getmSheetLayout().setVisibility(View.VISIBLE);
-        //}
-        // isSheetVisible = !isSheetVisible;
-        wm.updateViewLayout(window, lp);
     }
 
+    /**
+     * Arrow is a drawable that appears just above the parent_layout in the sheet layout.
+     * This method sets the arrow such that it always points at the middle of floating view above it.
+     */
     private void setArrowPos() {
         RelativeLayout.LayoutParams lp =
                 (RelativeLayout.LayoutParams) container.getSheetLayoutContainer()
@@ -198,6 +194,10 @@ class ExpandedWindow {
         container.getSheetLayoutContainer().getArrow().setLayoutParams(lp);
     }
 
+    /**
+     * This method adjusts the height of sheet layout such that it starts from the bottom
+     * of the window and extends up to where the floating view is.
+     */
     private void setSheetHeight() {
         int heightOfFloatingView = container.getFloatingContainer().
                 getmFloatingView().getHeight();
@@ -232,65 +232,21 @@ class ExpandedWindow {
         return Rect.intersects(rc1, rc2);
     }
 
-    /*void releaseService(WindowManager mWindowManager) {
-        if (isLayoutAddedToWindow) {
-            mWindowManager.removeView(getWindow());
-            //mWindowManager.removeView(collapsedWindow.
-            //        collapsedWindowFloatingView);
-            isLayoutAddedToWindow = false;
-        }
-    }*/
-
-    /*private void toggleWindowVisibility() {
-        if (isWindowVisible) window.setVisibility(View.GONE);
-        else window.setVisibility(View.VISIBLE);
-    }*/
-
-    /*private void swapWindow(boolean setCollapsedViewPos, WindowManager windowManager) {
-        if (!isSheetVisible) {
-            if (setCollapsedViewPos) {
-                RelativeLayout.LayoutParams layoutParams
-                        = container.getFloatingContainer().getRelativeParams();
-                int x = layoutParams.leftMargin;
-                int y = layoutParams.topMargin + statusBarHeight;
-                WindowManager.LayoutParams params = collapsedWindow.getLayoutParams();
-                params.x = x;
-                params.y = y;
-                windowManager.updateViewLayout(collapsedWindow.
-                        collapsedWindowFloatingView, params);
-            }
-            collapsedWindow.toggleVisibilty();
-            toggleWindowVisibility();
-            isWindowVisible = !isWindowVisible;
-        }
-    }*/
-
+    /**
+     * positions the floating view in expanded layout at the top right corner.
+     */
     void setFloatingView() {
         RelativeLayout.LayoutParams params = container.getFloatingContainer().getRelativeParams();
-            params.leftMargin = window.getWidth() -
-                    container.getFloatingContainer().getmFloatingView().getWidth();
-            params.topMargin = 0;
-            window.updateViewLayout(container.getFloatingContainer().
-                    getmFloatingView(), params);
+        params.leftMargin = window.getWidth() -
+                container.getFloatingContainer().getmFloatingView().getWidth();
+        params.topMargin = 0;
+        window.updateViewLayout(container.getFloatingContainer().
+                getmFloatingView(), params);
     }
-    /*private void setFloatingViewPosAfterTouch() {
-        RelativeLayout.LayoutParams params = container.getFloatingContainer().getRelativeParams();
-        if (isSheetVisible) {
-            params.leftMargin = previousParamsX;
-            params.topMargin = previousParamsY;
-            window.updateViewLayout(container.getFloatingContainer().
-                    getmFloatingView(), params);
-        } else {
-            previousParamsX = params.leftMargin;
-            previousParamsY = params.topMargin;
-            params.leftMargin = window.getWidth() -
-                    container.getFloatingContainer().getmFloatingView().getWidth();
-            params.topMargin = 0;
-            window.updateViewLayout(container.getFloatingContainer().
-                    getmFloatingView(), params);
-        }
-    }*/
 
+    /**
+     * @return {@link #window}
+     */
     RelativeLayout getWindow() {
         return window;
     }
@@ -301,31 +257,24 @@ class ExpandedWindow {
         windowManager.updateViewLayout(window, lp);
     }
 
-    public void setExpandedChoice(Integer expandedChoice) {
+    /**
+     * Sets whether the floating view should expand into a sheet layout or a music player layout
+     * <p><strong>Note:</strong>Don't set the expandedChoice value yourself. It is to be set by
+     * the user who integrates this library into his project</p>
+     *
+     * @param expandedChoice is 0 for music player layout and 1 for sheetLayout
+     */
+    void setExpandedChoice(Integer expandedChoice) {
         this.expandedChoice = expandedChoice;
     }
 
-    public void setmListener(expandedWindowListener mListener) {
+    /**
+     * Set a {@link expandedWindowListener} after implementing its abstract methods
+     *
+     * @param mListener Your listener instance with implemented methods
+     */
+    void setmListener(expandedWindowListener mListener) {
         this.mListener = mListener;
     }
 
-    /*private class CollapsedWindow {
-        private View collapsedWindowFloatingView;
-
-        private CollapsedWindow(FloatingViewContainer floatingViewContainer) {
-            collapsedWindowFloatingView = floatingViewContainer.getmFloatingView();
-        }
-
-        private void toggleVisibilty() {
-            boolean isCollapsedWindowVisible = !isWindowVisible;
-            if (isCollapsedWindowVisible)
-                collapsedWindowFloatingView.setVisibility(View.GONE);
-            else
-                collapsedWindowFloatingView.setVisibility(View.VISIBLE);
-        }
-
-        private WindowManager.LayoutParams getLayoutParams() {
-            return (WindowManager.LayoutParams) collapsedWindowFloatingView.getLayoutParams();
-        }
-    }*/
 }
