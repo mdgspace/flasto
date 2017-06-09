@@ -11,7 +11,8 @@
         <service
             android:name=".FloatingViewService"
             android:enabled="true"
-            android:exported="true"></service>
+            android:exported="true"
+            android:description="@string/service_description"/>
     </application>
 
 </manifest>
