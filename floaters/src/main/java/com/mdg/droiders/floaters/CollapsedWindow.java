@@ -207,7 +207,7 @@ class CollapsedWindow {
                         setInitialPos(params.x, params.y);
                         //get the touch location
                         setInitialTouchPos(event.getRawX(), event.getRawY());
-
+                        mClosingButtonView.setVisibility(View.VISIBLE);
                         return true;
                     }
                     case MotionEvent.ACTION_MOVE: {
@@ -231,7 +231,7 @@ class CollapsedWindow {
                         if (diffX < 10 && diffY < 10) {
                             mListener.clickHappened();
                         }
-
+                        mClosingButtonView.setVisibility(View.GONE);
                         if (isOverlapping(mClosingButtonView, window))
                             mListener.overlapped();
                         return true;
