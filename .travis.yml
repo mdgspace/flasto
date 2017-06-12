@@ -15,6 +15,13 @@ android:
     # The SDK version used to compile your project
     - android-25
 
+before_install:
+  - python <(curl -s https://raw.githubusercontent.com/TouK/sputnik-ci/master/sputnik-ci.py)
+
 script:
   - ./gradlew build
   - ./gradlew test
+
+notifications:
+    slack: sdsmdg:hBRszERiXBQVCRKHljR1Ilwk
+  
