@@ -17,8 +17,6 @@ class FloatingViewContainer {
     private View collapsedView;
     private View expandedView;
     private RelativeLayout.LayoutParams cachedRelativeParams;
-    private ImageView playButton, nextButton,
-            prevButton, openButton, closeButton;
 
     /**
      * Constructor for {@link FloatingViewContainer} class
@@ -95,6 +93,12 @@ class FloatingViewContainer {
      * @param context The @{@link Context} to use for displaying toast on view click
      */
     private void initOnClickListeners(final Context context) {
+
+        ImageView playButton;
+        ImageView nextButton;
+        ImageView prevButton;
+        ImageView openButton;
+        ImageView closeButton;
 
         playButton = (ImageView) mFloatingView.findViewById(R.id.play_btn);
         playButton.setOnClickListener(new View.OnClickListener() {

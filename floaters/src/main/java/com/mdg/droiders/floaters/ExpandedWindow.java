@@ -127,9 +127,8 @@ class ExpandedWindow {
                                 window.updateViewLayout(mfloatingView, lp);
                                 if (diffX < 10 && diffY < 10) {
                                     // TODO: Set MUSIC PLAYER functionality
-                                    if (expandedChoice
-                                            == 1) { // If the view expands in a sheet Layout like
-                                        // Messenger
+                                    if (expandedChoice == 1) {
+                                        // If the view expands in a sheet Layout like Messenger
                                         toggleVisibiltyStatus(windowManager);
                                     } else if (containerFloat.isViewCollapsed()) {
                                         //When user clicks on the image view of the collapsed
