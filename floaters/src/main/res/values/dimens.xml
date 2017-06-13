@@ -2,5 +2,6 @@
 <resources>
     <dimen name="size_normal">56dp</dimen>
     <dimen name="size_small">40dp</dimen>
+    <dimen name="size_circle_drawer">132dp</dimen>
     <dimen name="labels_text_size">14sp</dimen>
 </resources>
