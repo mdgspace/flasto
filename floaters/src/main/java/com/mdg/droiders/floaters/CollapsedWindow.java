@@ -207,7 +207,7 @@ class CollapsedWindow {
                         setInitialPos(params.x, params.y);
                         //get the touch location
                         setInitialTouchPos(event.getRawX(), event.getRawY());
-
+                        mClosingButtonView.setVisibility(View.VISIBLE);
                         return true;
                     }
                     case MotionEvent.ACTION_MOVE: {
@@ -220,7 +220,6 @@ class CollapsedWindow {
                         mWindowManager.updateViewLayout(window, params);
                         return true;
                     }
-
                     case MotionEvent.ACTION_UP: {
                         // Since we have implemented the onTouchListener therefore we cannot implement onClickListener
                         // Therefor we make changes to the onTouchListener to handle touch events
@@ -231,7 +230,7 @@ class CollapsedWindow {
                         if (diffX < 10 && diffY < 10) {
                             mListener.clickHappened();
                         }
-
+                        mClosingButtonView.setVisibility(View.GONE);
                         if (isOverlapping(mClosingButtonView, window))
                             mListener.overlapped();
                         return true;

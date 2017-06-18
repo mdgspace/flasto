@@ -13,7 +13,8 @@ import android.widget.RelativeLayout;
 
 /**
  * Contains a Relative Layout that has floating view and the sheet layout as its child views
- * and various methods to implement "floatation" of the floating view and set the position of sheet layout
+ * and various methods to implement "floatation" of the floating view and set the position of sheet
+ * layout
  */
 class ExpandedWindow {
 
@@ -83,6 +84,7 @@ class ExpandedWindow {
                                 container.setInitialPos(lp.leftMargin, lp.topMargin);
                                 //get the touch location
                                 container.setInitialTouchPos(event.getRawX(), event.getRawY());
+                                closeButtonLayout.setVisibility(View.VISIBLE);
                                 return true;
                             }
                             case MotionEvent.ACTION_MOVE: {
@@ -92,38 +94,59 @@ class ExpandedWindow {
                                         event.getRawX() - container.getInitialTouchX());
                                 y = (int) (container.getInitialY() +
                                         event.getRawY() - container.getInitialTouchY());
-                                if (x <= window.getWidth() - mfloatingView.getWidth())
+                                // This piece of code is to keep the floating view in screen bounds
+                                // if the view moves out of screen, it becomes invisible for some
+                                // reason
+                                if (x <= window.getWidth() - mfloatingView.getWidth()) {
                                     lp.leftMargin = x;
-                                else
+                                } else {
                                     lp.leftMargin = window.getWidth() - mfloatingView.getWidth();
+                                }
 
-                                if (y <= window.getHeight() - mfloatingView.getHeight())
+                                if (y <= window.getHeight() - mfloatingView.getHeight()) {
                                     lp.topMargin = y;
-                                else lp.topMargin = window.getHeight() - mfloatingView.getHeight();
+                                } else {
+                                    lp.topMargin = window.getHeight() - mfloatingView.getHeight();
+                                }
                                 window.updateViewLayout(mfloatingView, lp);
                                 return true;
                             }
                             case MotionEvent.ACTION_UP: {
-                                // Since we have implemented the onTouchListener therefore we cannot implement onClickListener
-                                // Therefor we make changes to the onTouchListener to handle touch events
+                                // Since we have implemented the onTouchListener therefore we
+                                // cannot implement onClickListener
+                                // Therefor we make changes to the onTouchListener to handle
+                                // touch events
+                                RelativeLayout.LayoutParams lp = containerFloat.getRelativeParams();
                                 container.setFloatingViewPos(window.getWidth());
                                 int diffX = (int) (event.getRawX() - container.getInitialTouchX());
                                 int diffY = (int) (event.getRawY() - container.getInitialTouchY());
+                                // In expanded view floating view returns to its initial pos
+                                // after touch event
+                                lp.leftMargin = (int) container.getInitialX();
+                                lp.topMargin = (int) container.getInitialY();
+                                window.updateViewLayout(mfloatingView, lp);
                                 if (diffX < 10 && diffY < 10) {
                                     // TODO: Set MUSIC PLAYER functionality
-                                    if (expandedChoice == 1) { // If the view expands in a sheet Layout like Messenger
+                                    if (expandedChoice == 1) {
+                                        // If the view expands in a sheet Layout like Messenger
                                         toggleVisibiltyStatus(windowManager);
                                     } else if (containerFloat.isViewCollapsed()) {
-                                        //When user clicks on the image view of the collapsed layout,
-                                        //visibility of the collapsed layout will be changed to "View.GONE"
+                                        //When user clicks on the image view of the collapsed
+                                        // layout,
+                                        //visibility of the collapsed layout will be changed to
+                                        // "View.GONE"
                                         //and expanded view will become visible.
                                         containerFloat.getCollapsedView().setVisibility(View.GONE);
-                                        containerFloat.getExpandedView().setVisibility(View.VISIBLE);
+                                        containerFloat.getExpandedView().setVisibility(
+                                                View.VISIBLE);
                                     }
                                     mListener.clickHappened();
                                 }
-                                if (isOverlapping(closeButtonLayout, containerFloat.getmFloatingView()))
+                                closeButtonLayout.setVisibility(View.GONE);
+                                if (isOverlapping(closeButtonLayout,
+                                        containerFloat.getmFloatingView())) {
                                     mListener.overlapped();
+                                }
                                 return true;
                             }
                         }
@@ -174,7 +197,7 @@ class ExpandedWindow {
             WindowManager.LayoutParams lp = getWindowLayoutParams();
             setSheetHeight();
             setArrowPos();
-            lp.dimAmount = 0.4f;
+            lp.dimAmount = 0.7f;
             wm.updateViewLayout(window, lp);
             isLayoutSet = true;
         }
@@ -182,7 +205,8 @@ class ExpandedWindow {
 
     /**
      * Arrow is a drawable that appears just above the parent_layout in the sheet layout.
-     * This method sets the arrow such that it always points at the middle of floating view above it.
+     * This method sets the arrow such that it always points at the middle of floating view above
+     * it.
      */
     private void setArrowPos() {
         RelativeLayout.LayoutParams lp =
@@ -259,7 +283,7 @@ class ExpandedWindow {
 
     /**
      * Sets whether the floating view should expand into a sheet layout or a music player layout
-     * <p><strong>Note:</strong>Don't set the expandedChoice value yourself. It is to be set by
+     * <p><strong>Note:</strong> Don't set the expandedChoice value yourself. It is to be set by
      * the user who integrates this library into his project</p>
      *
      * @param expandedChoice is 0 for music player layout and 1 for sheetLayout
