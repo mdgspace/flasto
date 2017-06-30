@@ -58,7 +58,7 @@ public class CustomCircularFloatingView extends android.support.v7.widget.AppCom
         } else {
             Drawable drawable = getDrawable();
             if (drawable == null)
-                drawable = getResources().getDrawable(R.drawable.default_pic, null);
+                drawable = getResources().getDrawable(R.drawable.ic_android_circle, null);
             Bitmap b = ((BitmapDrawable) drawable).getBitmap();
             Bitmap scaledBitmap = createCenterCroppedBMap(b, getCircleSize());
             Bitmap out = getCircularBitmap(scaledBitmap, getCircleSize());

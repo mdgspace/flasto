@@ -46,7 +46,7 @@ class WindowContainer {
      * Stores initial position {@link #initialX} and {@link #initialY} of floating view
      *
      * @param initialX x coordinate of the floating view
-     * @param initialY y coordinate of floating view
+     * @param initialY y coordinate of the floating view
      */
     void setInitialPos(float initialX, float initialY) {
         this.initialX = initialX;
