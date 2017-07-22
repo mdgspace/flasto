@@ -11,6 +11,10 @@ import static android.widget.RelativeLayout.ALIGN_PARENT_BOTTOM;
 
 /**
  * Contains a sheet layout and relevant methods related to it.
+ * SheetLayout is the overall layout of the expanded view.
+ * It contains an arrow, the view which shows the expanded content and chatheads at the top right.
+ * SheetContainer is the name of the cardview in which the content is shown.
+ * SheetLayoutContainer is the POJO that contains the methods to access sheetLayout and SheetContainer.
  */
 class SheetLayoutContainer {
 

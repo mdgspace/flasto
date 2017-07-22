@@ -22,7 +22,7 @@ class ExpandedWindow {
      * It is the Relative Layout that is used as a container
      * for all elements in the {@link ExpandedWindow}
      */
-    private RelativeLayout window;
+    private RelativeLayout windowRelativeLayout;
     /**
      * {@link WindowContainer} instance
      */
@@ -41,7 +41,7 @@ class ExpandedWindow {
 
     /**
      * an interface to notify service about click event or overlapping with the
-     * {@link FloatingViewService#mClosingButtonView} and the {@link #window)}
+     * {@link FloatingViewService#mClosingButtonView} and the {@link #windowRelativeLayout )}
      * <p>Similar to {@link com.mdg.droiders.floaters.CollapsedWindow.collapsedWindowListener}</p>
      */
     interface expandedWindowListener {
@@ -58,14 +58,14 @@ class ExpandedWindow {
      */
     ExpandedWindow(Context context, WindowContainer container) {
         this.container = container;
-        window = new RelativeLayout(context);
+        windowRelativeLayout = new RelativeLayout(context);
         isLayoutSet = false;
     }
 
     //moves floating view inside the relative layout
 
     /**
-     * Sets Touch listener on the floating view in the expanded {@link #window}
+     * Sets Touch listener on the floating view in the expanded {@link #windowRelativeLayout}
      *
      * @param windowManager     The {@link WindowManager} instance to use.
      * @param closeButtonLayout The closeButtonView to see if the floating view overlaps with it.
@@ -97,18 +97,18 @@ class ExpandedWindow {
                                 // This piece of code is to keep the floating view in screen bounds
                                 // if the view moves out of screen, it becomes invisible for some
                                 // reason
-                                if (x <= window.getWidth() - mfloatingView.getWidth()) {
+                                if (x <= windowRelativeLayout.getWidth() - mfloatingView.getWidth()) {
                                     lp.leftMargin = x;
                                 } else {
-                                    lp.leftMargin = window.getWidth() - mfloatingView.getWidth();
+                                    lp.leftMargin = windowRelativeLayout.getWidth() - mfloatingView.getWidth();
                                 }
 
-                                if (y <= window.getHeight() - mfloatingView.getHeight()) {
+                                if (y <= windowRelativeLayout.getHeight() - mfloatingView.getHeight()) {
                                     lp.topMargin = y;
                                 } else {
-                                    lp.topMargin = window.getHeight() - mfloatingView.getHeight();
+                                    lp.topMargin = windowRelativeLayout.getHeight() - mfloatingView.getHeight();
                                 }
-                                window.updateViewLayout(mfloatingView, lp);
+                                windowRelativeLayout.updateViewLayout(mfloatingView, lp);
                                 return true;
                             }
                             case MotionEvent.ACTION_UP: {
@@ -117,14 +117,14 @@ class ExpandedWindow {
                                 // Therefor we make changes to the onTouchListener to handle
                                 // touch events
                                 RelativeLayout.LayoutParams lp = containerFloat.getRelativeParams();
-                                container.setFloatingViewPos(window.getWidth());
+                                container.setFloatingViewPos(windowRelativeLayout.getWidth());
                                 int diffX = (int) (event.getRawX() - container.getInitialTouchX());
                                 int diffY = (int) (event.getRawY() - container.getInitialTouchY());
                                 // In expanded view floating view returns to its initial pos
                                 // after touch event
                                 lp.leftMargin = (int) container.getInitialX();
                                 lp.topMargin = (int) container.getInitialY();
-                                window.updateViewLayout(mfloatingView, lp);
+                                windowRelativeLayout.updateViewLayout(mfloatingView, lp);
                                 if (diffX < 10 && diffY < 10) {
                                     // TODO: Set MUSIC PLAYER functionality
                                     if (expandedChoice == 1) {
@@ -156,21 +156,21 @@ class ExpandedWindow {
     }
 
     /**
-     * Adds the sheetLayout and floating view to the {@link #window}
+     * Adds the sheetLayout and floating view to the {@link #windowRelativeLayout}
      */
     void addChildViews() {
-        window.addView(container.getSheetLayoutContainer().getmSheetLayout()
+        windowRelativeLayout.addView(container.getSheetLayoutContainer().getmSheetLayout()
                 , container.getSheetLayoutContainer().getDefaultSheetContainerLayoutParams());
-        window.addView(container.getFloatingContainer().getmFloatingView(),
+        windowRelativeLayout.addView(container.getFloatingContainer().getmFloatingView(),
                 container.getFloatingContainer().getDefaultRelativeParams());
     }
 
     void removeChildViews() {
-        window.removeAllViews();
+        windowRelativeLayout.removeAllViews();
     }
 
     /**
-     * {@link #window} will be added to the screen window covering the whole screen.
+     * {@link #windowRelativeLayout} will be added to the screen windowRelativeLayout covering the whole screen.
      *
      * @param wm {@link WindowManager} instance
      */
@@ -183,8 +183,8 @@ class ExpandedWindow {
                         WindowManager.LayoutParams.FLAG_DIM_BEHIND,
                 PixelFormat.TRANSLUCENT);
         layoutParams.dimAmount = 0;
-        wm.addView(window, layoutParams);
-        window.setVisibility(View.GONE);
+        wm.addView(windowRelativeLayout, layoutParams);
+        windowRelativeLayout.setVisibility(View.GONE);
     }
 
     /**
@@ -198,7 +198,7 @@ class ExpandedWindow {
             setSheetHeight();
             setArrowPos();
             lp.dimAmount = 0.7f;
-            wm.updateViewLayout(window, lp);
+            wm.updateViewLayout(windowRelativeLayout, lp);
             isLayoutSet = true;
         }
     }
@@ -214,13 +214,13 @@ class ExpandedWindow {
                         .getArrow().getLayoutParams();
         int arrowWidth = lp.width;
         int widthOfFLoatingView = container.getFloatingContainer().getmFloatingView().getWidth();
-        lp.setMarginStart(window.getWidth() - widthOfFLoatingView / 2 - arrowWidth / 2);
+        lp.setMarginStart(windowRelativeLayout.getWidth() - widthOfFLoatingView / 2 - arrowWidth / 2);
         container.getSheetLayoutContainer().getArrow().setLayoutParams(lp);
     }
 
     /**
      * This method adjusts the height of sheet layout such that it starts from the bottom
-     * of the window and extends up to where the floating view is.
+     * of the windowRelativeLayout and extends up to where the floating view is.
      */
     private void setSheetHeight() {
         int heightOfFloatingView = container.getFloatingContainer().
@@ -228,7 +228,7 @@ class ExpandedWindow {
         FrameLayout.LayoutParams layoutParams =
                 (FrameLayout.LayoutParams) container.getSheetLayoutContainer()
                         .getmSheetContainer().getLayoutParams();
-        layoutParams.height = window.getHeight() - heightOfFloatingView - 30;
+        layoutParams.height = windowRelativeLayout.getHeight() - heightOfFloatingView - 30;
         // 30 is to give extra space between floatingView and sheetLayout
         container.getSheetLayoutContainer()
                 .getmSheetLayout().getLayoutParams().height
@@ -240,7 +240,7 @@ class ExpandedWindow {
     }
 
     private WindowManager.LayoutParams getWindowLayoutParams() {
-        return (WindowManager.LayoutParams) window.getLayoutParams();
+        return (WindowManager.LayoutParams) windowRelativeLayout.getLayoutParams();
     }
 
     private boolean isOverlapping(View v1, View v2) {
@@ -261,24 +261,24 @@ class ExpandedWindow {
      */
     void setFloatingView() {
         RelativeLayout.LayoutParams params = container.getFloatingContainer().getRelativeParams();
-        params.leftMargin = window.getWidth() -
+        params.leftMargin = windowRelativeLayout.getWidth() -
                 container.getFloatingContainer().getmFloatingView().getWidth();
         params.topMargin = 0;
-        window.updateViewLayout(container.getFloatingContainer().
+        windowRelativeLayout.updateViewLayout(container.getFloatingContainer().
                 getmFloatingView(), params);
     }
 
     /**
-     * @return {@link #window}
+     * @return {@link #windowRelativeLayout}
      */
-    RelativeLayout getWindow() {
-        return window;
+    RelativeLayout getWindowRelativeLayout() {
+        return windowRelativeLayout;
     }
 
     void changeDimVal(int dim, WindowManager windowManager) {
         WindowManager.LayoutParams lp = getWindowLayoutParams();
         lp.dimAmount = 0.4f;
-        windowManager.updateViewLayout(window, lp);
+        windowManager.updateViewLayout(windowRelativeLayout, lp);
     }
 
     /**

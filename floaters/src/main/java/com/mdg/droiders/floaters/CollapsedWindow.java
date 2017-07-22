@@ -13,7 +13,7 @@ import android.widget.RelativeLayout;
 
 /**
  * Contains a Relative Layout that has all the floating views as its child view
- * and various methods to implement "floatation" of the
+ * and various methods to implement "floatation" of the chat heads.
  */
 class CollapsedWindow {
     /**

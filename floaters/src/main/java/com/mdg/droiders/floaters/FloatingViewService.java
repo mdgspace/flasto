@@ -89,7 +89,7 @@ public class FloatingViewService extends Service {
          */
         public void releaseService() {
             if (expandedWindow != null && mWindowManager != null && collapsedWindow != null) {
-                mWindowManager.removeView(expandedWindow.getWindow());
+                mWindowManager.removeView(expandedWindow.getWindowRelativeLayout());
                 mWindowManager.removeView(collapsedWindow.getWindow());
                 mWindowManager.removeView(mClosingButtonView);
             }
@@ -112,9 +112,11 @@ public class FloatingViewService extends Service {
         mSheetLayoutContainer = new SheetLayoutContainer(this);
         WindowContainer mWindowContainer = new WindowContainer(mSheetLayoutContainer, floatingExpandedContainer);
         expandedWindow = new ExpandedWindow(this, mWindowContainer);
+
         // Init collapsed view related classes
         FloatingViewContainer floatingCollapsedContainer = new FloatingViewContainer(this, true, false);
         collapsedWindow = new CollapsedWindow(this, floatingCollapsedContainer);
+
         // Init close button at which will be position at the bottom of the screen
         mClosingButtonView = LayoutInflater.from(this).inflate(R.layout.close_button, null);
 
@@ -171,7 +173,7 @@ public class FloatingViewService extends Service {
         expandedWindow.setmListener(new ExpandedWindow.expandedWindowListener() {
             @Override
             public void clickHappened() {
-                expandedWindow.getWindow().setVisibility(View.GONE);
+                expandedWindow.getWindowRelativeLayout().setVisibility(View.GONE);
                 collapsedWindow.getWindow().setVisibility(View.VISIBLE);
             }
 
@@ -187,7 +189,7 @@ public class FloatingViewService extends Service {
                 expandedWindow.toggleVisibiltyStatus(mWindowManager);
                 expandedWindow.setFloatingView();
                 expandedWindow.setExpandedChoice(expandedChoice);
-                expandedWindow.getWindow().setVisibility(View.VISIBLE);
+                expandedWindow.getWindowRelativeLayout().setVisibility(View.VISIBLE);
             }
 
             @Override
